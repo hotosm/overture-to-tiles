@@ -88,6 +88,8 @@ The script will generate the following files in the specified `output_path`:
 
 Note that if you extract data for all themes, separate GeoParquet and PMTiles files will be generated for each theme.
 
+You can visualize your extracted pmtiles using [Pmtiles viewer](https://protomaps.github.io/PMTiles/)
+
 
 ### Notebook example
 
