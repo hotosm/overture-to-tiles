@@ -2,8 +2,24 @@
 
 # Set variables
 BBOX=${1:-""} # No default bounding box
-THEME=${2:-"all"} # Default to extract all themes if no theme is provided
+THEME=${2:-""} # No default theme
 OUTPUT_PATH=${3:-"."}
+
+# Array of valid themes
+VALID_THEMES=(
+    "locality"
+    "locality_area"
+    "administrative_boundary"
+    "building"
+    "building_part"
+    "place"
+    "segment"
+    "connector"
+    "infrastructure"
+    "land"
+    "land_use"
+    "water"
+)
 
 # Function to download, validate, and convert data
 download_and_convert() {
@@ -20,21 +36,24 @@ download_and_convert() {
     fi
 
     # Convert to geojsonseq to PMTiles
-
     echo "Converting $theme data to PMtiles format ..."
-    tippecanoe -o "$OUTPUT_PATH/$theme.pmtiles" "$OUTPUT_PATH/$theme.geojsonseq --force --read-parallel -l $theme -rg --drop-densest-as-needed"
+    tippecanoe -o "$OUTPUT_PATH/$theme.pmtiles" "$OUTPUT_PATH/$theme.geojsonseq" --force --read-parallel -l "$theme" -rg --drop-densest-as-needed
+
     echo "Done processing $theme data."
 }
 
-# Call the download_and_convert function for specified theme or all themes
-echo "Starting data download and conversion..."
-
-if [ "$THEME" == "all" ]; then
-    for theme in $(overturemaps download --help | grep -o 'type=[a-z]*' | cut -d'=' -f2); do
+# Check if a valid theme is provided
+if [ -n "$THEME" ] && printf '%s\n' "${VALID_THEMES[@]}" | grep -qw "$THEME"; then
+    echo "Starting data download and conversion for $THEME..."
+    download_and_convert "$THEME"
+    echo "Data download and conversion completed."
+elif [ -z "$THEME" ]; then
+    echo "No theme provided. Downloading and processing all themes..."
+    for theme in "${VALID_THEMES[@]}"; do
         download_and_convert "$theme"
     done
+    echo "Data download and conversion for all themes completed."
 else
-    download_and_convert "$THEME"
+    echo "Invalid theme provided. Please provide a valid theme from the following options:"
+    printf "%s\n" "${VALID_THEMES[@]}"
 fi
-
-echo "Data download and conversion completed."
