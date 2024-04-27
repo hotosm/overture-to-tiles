@@ -72,13 +72,13 @@ There are two ways to extract :
   - `theme`: (Optional) The specific theme to extract and convert. If not provided or set to `"all"`, data for all themes will be extracted and converted. Supported themes are: `admins`, `transportation`, `buildings`, and `places`.
   - `output_path`: (Optional) The output path for the GeoParquet and PMTiles files. Default is the current directory (`.`).
 
-  ## Bash Example
+    #### Bash Example
 
-  - Extract and convert data for the `admins` theme without filtering:
-
-  ```bash
-  bash ./extract-duckdb.sh "" "2024-04-16-beta.0" "admins"
-  ```
+    - Extract and convert data for the `admins` theme without filtering:
+    
+    ```bash
+    bash ./extract-duckdb.sh "" "2024-04-16-beta.0" "admins"
+    ```
 
 ## Output
 
