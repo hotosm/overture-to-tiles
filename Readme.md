@@ -1,6 +1,6 @@
 ## Process overture data
 
-This repo has scripts that downloads overture map data , clips it for your area of interest , converts it to geoparquet and finally create vector tiles so that it can be visualized in maps.
+This repo has scripts that downloads overture map data , clips it for your area of interest , converts vector tiles so that it can be visualized in maps.
 
 
 ## Release and Source 
