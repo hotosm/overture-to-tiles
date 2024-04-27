@@ -1,4 +1,4 @@
-## Process overture data
+## Overture data to Tiles
 
 This repo has scripts that downloads overture map data , clips it for your area of interest , converts vector tiles so that it can be visualized in maps.
 
@@ -25,8 +25,11 @@ There are two ways to extract :
 1. **Using overturemap python cli and tippecanoe [Recommended]**
 
 - Install [overturemap cli](https://github.com/OvertureMaps/overturemaps-py/tree/main) -> Downloads dataset from s3 to geojsonseq
+  ```bash
+  pip install overturemaps
 - Install [tippecanoe](https://github.com/felt/tippecanoe) -> Converts geojsonseq to pmtiles , Install using [bash](./install/install-tippecanoe.sh)
-
+  ```bash
+  bash ./install/install-tippecanoe.sh
 
 2. **Using duckdb and gpq**
 
