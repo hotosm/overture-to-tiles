@@ -71,21 +71,21 @@ There are two ways to extract :
   - Extract all data
 
   ```bash 
-  bash ./extract-python.sh 
+  bash ./extract/extract-python.sh 
   ```
 
 
   - Example to download places data only 
 
   ```bash
-  bash ./extract-python.sh "" "locality"
+  bash ./extract/extract-python.sh "" "locality"
   ```
   
 
 ### 2. Using duckdb and gpq 
 
   ```bash
-  bash ./extract-duckdb.sh [country_geojson] [release_version] [theme] [output_path]
+  bash ./extract/extract-duckdb.sh [country_geojson] [release_version] [theme] [output_path]
   ```
   - `country_geojson`: (Optional) Path to the country boundary GeoJSON file. If not provided, all data will be extracted without filtering.
   - `release_version`: (Optional) The current release version. Default is `"2024-04-16-beta.0"`.
@@ -97,7 +97,7 @@ There are two ways to extract :
     - Extract and convert data for the `admins` theme without filtering:
     
     ```bash
-    bash ./extract-duckdb.sh "" "2024-04-16-beta.0" "admins"
+    bash ./extract/extract-duckdb.sh "" "2024-04-16-beta.0" "admins"
     ```
 
 ## Output
