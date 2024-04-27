@@ -46,6 +46,23 @@ There are two ways to extract :
     - **THEME (optional):** The theme or type of data to be downloaded. If not provided, it defaults to "all", which means all available themes will be processed.
     - **OUTPUT_PATH (optional):** The output directory where the downloaded and converted data files will be saved. If not provided, it defaults to the current directory.
   
+  #### Overture-py cli themes 
+```json 
+{
+  "locality": "admins",
+  "locality_area": "admins",
+  "administrative_boundary": "admins",
+  "building": "buildings",
+  "building_part": "buildings",
+  "place": "places",
+  "segment": "transportation",
+  "connector": "transportation",
+  "infrastructure": "base",
+  "land": "base",
+  "land_use": "base",
+  "water": "base"
+}
+```
 
 
   - Extract all data
