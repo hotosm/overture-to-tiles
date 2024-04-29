@@ -10,26 +10,26 @@ RELEASE=${4:-"2024-04-16-beta.0"}
 
 # Array of valid themes and their corresponding input files
 VALID_THEMES=(
-    "locality:locality.geojsonseq"
-    "locality_area:locality_area.geojsonseq"
-    "administrative_boundary:administrative_boundary.geojsonseq"
-    "building:building.geojsonseq"
-    "building_part:building_part.geojsonseq"
-    "place:place.geojsonseq"
-    "segment:segment.geojsonseq"
-    "connector:connector.geojsonseq"
-    "infrastructure:infrastructure.geojsonseq"
-    "land:land.geojsonseq"
-    "land_use:land_use.geojsonseq"
-    "water:water.geojsonseq"
+    "locality:locality.geojson"
+    "locality_area:locality_area.geojson"
+    "administrative_boundary:administrative_boundary.geojson"
+    "building:building.geojson"
+    "building_part:building_part.geojson"
+    "place:place.geojson"
+    "segment:segment.geojson"
+    "connector:connector.geojson"
+    "infrastructure:infrastructure.geojson"
+    "land:land.geojson"
+    "land_use:land_use.geojson"
+    "water:water.geojson"
 )
 
 # Function to download, validate, and convert data
 download_and_convert() {
     local theme_file=$1
-    local theme="${theme_file%:*}"
-    local input_file="${theme_file#*:}"
-    local output_file="$OUTPUT_PATH/$theme.geojsonseq"
+    theme="${theme_file%:*}"
+    input_file="${theme_file#*:}"
+    output_file="$OUTPUT_PATH/$theme.geojsonseq"
 
     # Check if OUTPUT_PATH is an absolute path
     if [[ "$OUTPUT_PATH" != /* ]]; then
@@ -56,8 +56,8 @@ if [ "$THEME" = "all" ]; then
     LAYER_FLAGS=""
     for theme_file in "${VALID_THEMES[@]}"; do
         download_and_convert "$theme_file"
-        local theme="${theme_file%:*}"
-        local input_file="${theme_file#*:}"
+        theme="${theme_file%:*}"
+        input_file="${theme_file#*:}"
         LAYER_FLAGS="$LAYER_FLAGS -L $theme:$OUTPUT_PATH/$theme.geojsonseq"
     done
 
@@ -68,8 +68,8 @@ if [ "$THEME" = "all" ]; then
 else
     echo "Starting data download and conversion for $THEME..."
     download_and_convert "$THEME"
-    local theme="${THEME%:*}"
-    local input_file="${THEME#*:}"
+    theme="${THEME%:*}"
+    input_file="${THEME#*:}"
     echo "Converting $theme data to PMtiles format ..."
     tippecanoe -o "$OUTPUT_PATH/$theme.pmtiles" -L "$theme:$OUTPUT_PATH/$theme.geojsonseq" --force --read-parallel -rg --drop-densest-as-needed
     echo "Data download and conversion completed."
