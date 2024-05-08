@@ -1,0 +1,52 @@
+[
+    {
+        "name": "places",
+        "theme": "places",
+        "minZoom": 13,
+        "maxZoom": 13
+    },
+    {
+        "name": "placenames",
+        "theme": "admins",
+        "type": "locality",
+        "minZoom": 4,
+        "maxZoom": 10
+    },
+    {
+        "name": "buildings",
+        "theme": "buildings",
+        "type": "building",
+        "minZoom": 13,
+        "maxZoom": 13
+    },
+    {
+        "name": "roads",
+        "theme": "transportation",
+        "type": "segment",
+        "minZoom": 10,
+        "maxZoom": 13
+    },
+    {
+        "name": "base",
+        "layers": [
+            {
+                "name": "land_use",
+                "type": "land_use",
+                "minZoom": 8,
+                "maxZoom": 13
+            },
+            {
+                "name": "water",
+                "type": "water",
+                "minZoom": 8,
+                "maxZoom": 13
+            },
+            {
+                "name": "land",
+                "type": "land",
+                "minZoom": 8,
+                "maxZoom": 13
+            }
+        ]
+    }
+]

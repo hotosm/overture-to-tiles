@@ -1,0 +1,56 @@
+[
+    {
+        "name": "place",
+        "type": "place",
+        "minZoom": 5,
+        "maxZoom": 10
+    },
+    {
+        "name": "locality",
+        "type": "locality",
+        "minZoom": 6,
+        "maxZoom": 12
+    },
+    {
+        "name": "road",
+        "type": "segment",
+        "minZoom": 10,
+        "maxZoom": 14
+    },
+    {
+        "name": "building",
+        "type": "building",
+        "minZoom": 12,
+        "maxZoom": 16
+    },
+    {
+        "name": "infrastructure",
+        "type": "infrastructure",
+        "minZoom": 10,
+        "maxZoom": 15
+    },
+    {
+        "name": "boundary",
+        "type": "administrative_boundary",
+        "minZoom": 5,
+        "maxZoom": 12
+    },
+    {
+        "name": "land_use",
+        "type": "land_use",
+        "minZoom": 8,
+        "maxZoom": 14
+    },
+    {
+        "name": "water",
+        "type": "water",
+        "minZoom": 5,
+        "maxZoom": 14
+    },
+    {
+        "name": "land",
+        "type": "land",
+        "minZoom": 5,
+        "maxZoom": 14
+    }
+]

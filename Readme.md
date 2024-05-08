@@ -33,13 +33,13 @@ s3://overturemaps-us-west-2/release/2024-04-16-beta.0/
 
 1. Download everything in pokhara and convert it to individual tiles per theme
 ```bash
-bash .scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara"
+bash scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara"
 ```
 
 2. Download everything in pokhara and create a single pmtiles with multiple layers in it
 
 ```bash
-bash .scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara" "" true
+bash scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara" "" true
 ```
 
 
