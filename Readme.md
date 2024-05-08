@@ -26,7 +26,7 @@ There are two ways to extract :
 
 - Install [overturemap cli](https://github.com/OvertureMaps/overturemaps-py/tree/main) -> Downloads dataset from s3 to geojsonseq
   ```bash
-  pip install overturemaps
+  pip install git+https://github.com/kshitijrajsharma/overturemaps-py.git/@main
 - Install [tippecanoe](https://github.com/felt/tippecanoe) -> Converts geojsonseq to pmtiles , Install using [bash](./install/install-tippecanoe.sh)
   ```bash
   bash ./install/install-tippecanoe.sh
