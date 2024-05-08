@@ -29,9 +29,9 @@ BASE_THEMES=(
     "land:land.geojson"
     "land_use:land_use.geojson"
     "water:water.geojson"
-    "building_part:building_part.geojson"
-    "connector:connector.geojson"
-    "locality_area:locality_area.geojson"
+    # "building_part:building_part.geojson"
+    # "connector:connector.geojson"
+    # "locality_area:locality_area.geojson"
 )
 
 # Function to download, validate, and convert data
@@ -39,53 +39,55 @@ download_and_convert() {
     local theme_file=$1
     theme="${theme_file%:*}"
     input_file="${theme_file#*:}"
-    output_file="$OUTPUT_DIR/geojson/$theme.geojsonseq"
+    output_file_parquet="$OUTPUT_DIR/parquet/$theme.geo.parquet"
+    output_file_geojson="$OUTPUT_DIR/geojson/$theme.geojsonseq"
 
     # Create the output directories if they don't exist
-    mkdir -p "$OUTPUT_DIR/pmtiles" "$OUTPUT_DIR/geojson"
+    mkdir -p "$OUTPUT_DIR/pmtiles" "$OUTPUT_DIR/geojson" "$OUTPUT_DIR/parquet"
 
     # Download data
     if [ -n "$BBOX" ]; then
-        echo "Downloading $theme data within the specified bounding box..."
-        overturemaps download -f geojsonseq --type="$theme" --bbox "$BBOX" -o "$output_file"
+        echo "Download: $theme , bbox:true ...."
+        overturemaps download -f geoparquet --type="$theme" --bbox "$BBOX" -o "$output_file_parquet"
     else
-        echo "Downloading $theme data for the entire dataset..."
-        overturemaps download -f geojsonseq --type="$theme" -o "$output_file"
+        echo "Download: $theme, bbox:false ...."
+        overturemaps download -f geoparquet --type="$theme" -o "$output_file_parquet"
     fi
-
+    echo "Convert: $theme parquet to geojsonseq ...."
+    python pyscripts/parquet2geojson.py -f geojsonseq -i "$output_file_parquet" -o "$output_file_geojson"
     # Add the theme to the processed_themes array
     processed_themes+=("$theme")
 }
 
 # Check if a valid theme is provided
 if [ "$THEME" = "all" ]; then
-    echo "Downloading and processing all themes..."
+    echo "Start..."
     processed_themes=()
     for theme_file in "${BASE_THEMES[@]}"; do
         download_and_convert "$theme_file"
     done
 
     if $COMBINE; then
-        echo "Creating overture-$RELEASE.pmtiles with multiple layers..."
+        echo "Create: overture-$RELEASE.pmtiles , layers:multi ...."
         LAYER_FLAGS=""
         for theme in "${processed_themes[@]}"; do
             LAYER_FLAGS="$LAYER_FLAGS -L $theme:$OUTPUT_DIR/geojson/$theme.geojsonseq"
         done
         tippecanoe -o "$OUTPUT_DIR/pmtiles/overture-$RELEASE.pmtiles" $LAYER_FLAGS --force --read-parallel -rg --drop-densest-as-needed
-        echo "Data download and conversion for all themes completed."
+        echo "Complete: Mode - Multilayer"
     else
         for theme in "${processed_themes[@]}"; do
-            echo "Converting $theme data to PMtiles format ..."
+            echo "Convert: $theme geojsonseq to PMtiles ...."
             tippecanoe -o "$OUTPUT_DIR/pmtiles/$theme.pmtiles" "$OUTPUT_DIR/geojson/$theme.geojsonseq" --force --read-parallel -l "$theme" -rg --drop-densest-as-needed
         done
-        echo "Data download and conversion for all themes completed with separate tiles per theme."
+        echo "Complete: Mode - Separate tiles per theme"
     fi
 else
     echo "Starting data download and conversion for $THEME..."
     download_and_convert "$THEME"
     theme="${THEME%:*}"
     input_file="${THEME#*:}"
-    echo "Converting $theme data to PMtiles format ..."
+    echo "Convert: $theme geojsonseq to PMtiles ...."
     tippecanoe -o "$OUTPUT_DIR/pmtiles/$theme.pmtiles" "$OUTPUT_DIR/geojson/$theme.geojsonseq" --force --read-parallel -l "$theme" -rg --drop-densest-as-needed
-    echo "Data download and conversion completed."
+    echo "Complete : Mode - Single"
 fi

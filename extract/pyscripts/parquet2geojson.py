@@ -5,7 +5,7 @@ This script converts a Parquet file containing geospatial data to GeoJSON or Geo
 It uses all available CPU cores for parallel processing to maximize performance.
 
 Install :
-pip install click pyarrow shapely tqdm
+pip install click pyarrow shapely
 
 Usage:
 
@@ -59,9 +59,9 @@ import shapely.wkb
 )
 def convert(input, output, format, num_workers):
 
-    print(f"Reading from {input}")
-    print(f"Converting to {format} format and writing to {output}")
-    print(f"Using {num_workers} worker processes")
+    print(f"Read : {input}")
+    print(f"Write : {format} - {output}")
+    print(f"Workers: {num_workers}")
     pq_file = pq.ParquetFile(input)
     if num_workers > 1:
         pool = mp.Pool(processes=num_workers)
