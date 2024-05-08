@@ -69,21 +69,6 @@ bash .scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara" 
 ```
 
 
-- Extract all data
-
-```bash 
-bash ./extract/extract-python.sh 
-```
-
-
-- Example to download places data only 
-
-```bash
-bash ./extract/extract-python.sh "" "locality"
-```
-
-
-
 ## Output
 
 The script will generate the following files in the specified `output_path`:
