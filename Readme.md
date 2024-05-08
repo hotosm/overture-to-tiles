@@ -2,7 +2,6 @@
 
 This repo has scripts that downloads overture map data , clips it for your area of interest , converts vector tiles so that it can be visualized in maps.
 
-
 ## Release and Source 
 
 https://github.com/OvertureMaps/data
@@ -20,9 +19,7 @@ s3://overturemaps-us-west-2/release/2024-04-16-beta.0/
 
 ## Installation 
 
-There are two ways to extract : 
-
-1. **Using overturemap python cli and tippecanoe [Recommended]**
+**Using overturemap python cli and tippecanoe [Recommended]**
 
 - Install [overturemap cli](https://github.com/OvertureMaps/overturemaps-py/tree/main) -> Downloads dataset from s3 to geojsonseq
   ```bash
@@ -31,25 +28,29 @@ There are two ways to extract :
   ```bash
   bash ./install/install-tippecanoe.sh
 
-2. **Using duckdb and gpq**
 
-- Install [duckdb](https://duckdb.org/docs/installation/index) -> Downloads from s3 and converts file to parquet, Install using [bash](./install/install-duckdb.sh)
-- Install [gpq](https://github.com/planetlabs/gpq#installation) -> Converts parquet to geoparquet 
-- Install [gdal](https://gdal.org/programs/ogr2ogr.html) -> Cnverts geoparquet to tiles (Requires gdal>3.7)
+## Examples: 
 
+1. Download everything in pokhara and convert it to individual tiles per theme
+```bash
+bash .scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara"
+```
+
+2. Download everything in pokhara and create a single pmtiles with multiple layers in it
+
+```bash
+bash .scripts/extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara" "" true
+```
 
 
 ## Usage 
 
+#### Options : 
+  - **BBOX (optional)**: The bounding box coordinates for the desired area. If not provided, no bounding box filter will be applied.
+  - **THEME (optional):** The theme or type of data to be downloaded. If not provided, it defaults to "all", which means all available themes will be processed.
+  - **OUTPUT_PATH (optional):** The output directory where the downloaded and converted data files will be saved. If not provided, it defaults to the current directory.
 
-### 1. Using overturepy cli [Recommended]
-
-  #### Options : 
-    - **BBOX (optional)**: The bounding box coordinates for the desired area. If not provided, no bounding box filter will be applied.
-    - **THEME (optional):** The theme or type of data to be downloaded. If not provided, it defaults to "all", which means all available themes will be processed.
-    - **OUTPUT_PATH (optional):** The output directory where the downloaded and converted data files will be saved. If not provided, it defaults to the current directory.
-  
-  #### Overture-py cli themes 
+#### Overture-py cli themes 
 ```json 
 {
   "locality": "admins",
@@ -68,37 +69,20 @@ There are two ways to extract :
 ```
 
 
-  - Extract all data
+- Extract all data
 
-  ```bash 
-  bash ./extract/extract-python.sh 
-  ```
+```bash 
+bash ./extract/extract-python.sh 
+```
 
 
-  - Example to download places data only 
+- Example to download places data only 
 
-  ```bash
-  bash ./extract/extract-python.sh "" "locality"
-  ```
-  
+```bash
+bash ./extract/extract-python.sh "" "locality"
+```
 
-### 2. Using duckdb and gpq 
 
-  ```bash
-  bash ./extract/extract-duckdb.sh [country_geojson] [release_version] [theme] [output_path]
-  ```
-  - `country_geojson`: (Optional) Path to the country boundary GeoJSON file. If not provided, all data will be extracted without filtering.
-  - `release_version`: (Optional) The current release version. Default is `"2024-04-16-beta.0"`.
-  - `theme`: (Optional) The specific theme to extract and convert. If not provided or set to `"all"`, data for all themes will be extracted and converted. Supported themes are: `admins`, `transportation`, `buildings`, and `places`.
-  - `output_path`: (Optional) The output path for the GeoParquet and PMTiles files. Default is the current directory (`.`).
-
-    #### Bash Example
-
-    - Extract and convert data for the `admins` theme without filtering:
-    
-    ```bash
-    bash ./extract/extract-duckdb.sh "" "2024-04-16-beta.0" "admins"
-    ```
 
 ## Output
 
@@ -110,7 +94,3 @@ Note that if you extract data for all themes, separate GeoParquet and PMTiles fi
 
 You can visualize your extracted pmtiles using [Pmtiles viewer](https://protomaps.github.io/PMTiles/)
 
-
-### Notebook example
-
-I have provided how we can use duckdb to run spatial queries over the downloaded parquet files in this [notebook](./overture_duckdb.ipynb) 
