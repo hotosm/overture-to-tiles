@@ -74,12 +74,25 @@ def convert(input, output, format, num_workers):
             writer.write_batch(batch)
 
 
+def flatten_properties(data, target, parent_key="", top_level=False):
+    for k, v in data.items():
+        if top_level and (k == "bbox" or v is None):
+            continue  # Skip "bbox" keys and None values in top-level
+        elif isinstance(v, dict):
+            new_parent_key = f"{parent_key}.{k}" if parent_key else k
+            flatten_properties(v, target, new_parent_key, top_level=False)
+        else:
+            key = f"{parent_key}.{k}" if parent_key else k
+            target[key] = v
+
+
 def convert_batch(batch):
     features = []
     for row in batch.to_pylist():
         geometry = shapely.wkb.loads(row.pop("geometry"))
         row.pop("bbox", None)  # Remove bbox column if present
-        properties = {k: v for k, v in row.items() if v is not None}
+        properties = {}
+        flatten_properties(row, properties, top_level=True)
         features.append(
             {
                 "type": "Feature",
