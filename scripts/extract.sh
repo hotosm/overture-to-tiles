@@ -8,7 +8,7 @@ THEME=${2:-"all"} # Default theme is "all"
 OUTPUT_DIR=${3:-"$(pwd)/output"}
 RELEASE=${4:-"2024-04-16-beta.0"}
 COMBINE=${5:-false} # Default is to create separate tiles per theme
-BASE_THEMES_PATH=${6:-"default_theme.json"} # Default path to base_themes.json
+BASE_THEMES_PATH=${6:-"base_theme.json"} # Default path to base_themes.json
 
 
 # Display the parameters supplied
@@ -34,6 +34,7 @@ BASE_THEMES=$(jq -c '.[]' "$base_themes_file")
 # Function to download, validate, and convert data
 download_and_convert() {
     local theme_info=$1
+    local is_nested=${2:-false}
     local theme=$(echo "$theme_info" | jq -r '.theme // ""')
     local type=$(echo "$theme_info" | jq -r '.type // ""')
     local name=$(echo "$theme_info" | jq -r '.name')
@@ -54,6 +55,7 @@ download_and_convert() {
                 overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -cty "$type" -o "$output_file_parquet"
             else
                 echo "Download: bbox:true , theme:$theme ...."
+                
                 overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -o "$output_file_parquet"
             fi
         else
@@ -79,7 +81,34 @@ download_and_convert() {
     python pyscripts/parquet2geojson.py -f geojsonseq -i "$output_file_parquet" -o "$output_file_geojson"
 
     # Add the theme to the processed_themes array
-    processed_themes+=("$theme_info")
+    if [ "$is_nested" = "false" ]; then
+        processed_themes+=("$theme_info")
+    fi
+}
+
+# Function to process nested entries
+process_nested_entries() {
+    local nested_entry=$1
+    local parent_name=$(echo "$nested_entry" | jq -r '.name')
+    local parent_minzoom=$(echo "$nested_entry" | jq -r '.minZoom')
+    local parent_maxzoom=$(echo "$nested_entry" | jq -r '.maxZoom')
+
+
+    local nested_layer_flags=""
+
+    for layer in $(echo "$nested_entry" | jq -c '.layers[]'); do
+        name=$(echo "$layer" | jq -r '.name')
+        theme=$(echo "$layer" | jq -r '.theme')
+        type=$(echo "$layer" | jq -r '.type')
+        min_zoom=$(echo "$layer" | jq -r '.minZoom')
+        max_zoom=$(echo "$layer" | jq -r '.maxZoom')
+
+        download_and_convert "$layer" true
+        nested_layer_flags="$nested_layer_flags --named-layer=$type:$OUTPUT_DIR/geojson/$name.geojsonseq"
+    done
+
+    echo "Create: $parent_name.pmtiles , layers:multi ...."
+    tippecanoe -o "$OUTPUT_DIR/pmtiles/$parent_name.pmtiles" -Z$parent_minzoom -z$parent_maxzoom $nested_layer_flags --force --read-parallel -rg --drop-densest-as-needed
 }
 
 # Check if a valid theme is provided
@@ -87,41 +116,48 @@ if [ "$THEME" = "all" ]; then
     echo "Start..."
     processed_themes=()
     while read -r theme_info; do
-        download_and_convert "$theme_info"
+        if $(echo "$theme_info" | jq -e '.layers? | type == "array"'); then
+            process_nested_entries "$theme_info"
+        else
+            download_and_convert "$theme_info"
+        fi
     done <<< "$BASE_THEMES"
+
     if $COMBINE; then
-        echo "Create: overture-$RELEASE.pmtiles , layers:multi ...."
+        echo "Create: combined-$RELEASE.pmtiles , layers:multi ...."
         LAYER_FLAGS=""
         for theme_info in "${processed_themes[@]}"; do
             name=$(echo "$theme_info" | jq -r '.name')
+            type=$(echo "$theme_info" | jq -r '.type')
             min_zoom=$(echo "$theme_info" | jq -r '.minZoom')
             max_zoom=$(echo "$theme_info" | jq -r '.maxZoom')
             LAYER_FLAGS="$LAYER_FLAGS -L $type:$OUTPUT_DIR/geojson/$name.geojsonseq"
         done
         tippecanoe -o "$OUTPUT_DIR/pmtiles/combined-$RELEASE.pmtiles" $LAYER_FLAGS --force --read-parallel -rg --drop-densest-as-needed
         echo "Complete: Mode - Multilayer"
-    else
-        for theme_info in "${processed_themes[@]}"; do
-            name=$(echo "$theme_info" | jq -r '.name')
-            min_zoom=$(echo "$theme_info" | jq -r '.minZoom')
-            max_zoom=$(echo "$theme_info" | jq -r '.maxZoom')
-            echo "Convert: $type geojsonseq to PMtiles ...."
-            tippecanoe -o "$OUTPUT_DIR/pmtiles/$name.pmtiles" "$OUTPUT_DIR/geojson/$name.geojsonseq" --force --read-parallel -l "$name" -Z$min_zoom -z$max_zoom -rg --drop-densest-as-needed
-        done
-        echo "Complete: Mode - Separate tiles per theme"
-    fi
+   else
+       for theme_info in "${processed_themes[@]}"; do
+           name=$(echo "$theme_info" | jq -r '.name')
+           type=$(echo "$theme_info" | jq -r '.type')
+           min_zoom=$(echo "$theme_info" | jq -r '.minZoom')
+           max_zoom=$(echo "$theme_info" | jq -r '.maxZoom')
+           echo "Convert: $name geojsonseq to PMtiles ...."
+           tippecanoe -o "$OUTPUT_DIR/pmtiles/$name.pmtiles" "$OUTPUT_DIR/geojson/$name.geojsonseq" --force --read-parallel -l "$name" -Z$min_zoom -z$max_zoom -rg --drop-densest-as-needed
+       done
+       echo "Complete: Mode - Separate tiles per theme"
+   fi
 else
-    echo "Starting data download and conversion for $THEME..."
-    theme_info=$(echo "$BASE_THEMES" | jq --arg type "$THEME" '.[] | select(.type == $type)')
-    if [ -z "$theme_info" ]; then
-        echo "Error: Invalid theme $THEME"
-        exit 1
-    fi
-    download_and_convert "$theme_info"
-    name=$(echo "$theme_info" | jq -r '.name')
-    min_zoom=$(echo "$theme_info" | jq -r '.minZoom')
-    max_zoom=$(echo "$theme_info" | jq -r '.maxZoom')
-    echo "Convert: $name geojsonseq to PMtiles ...."
-    tippecanoe -o "$OUTPUT_DIR/pmtiles/$name.pmtiles" "$OUTPUT_DIR/geojson/$name.geojsonseq" --force --read-parallel -l "$name" -Z$min_zoom -z$max_zoom -rg --drop-densest-as-needed
-    echo "Complete : Mode - Single"
-fi 
+   echo "Starting data download and conversion for $THEME..."
+   theme_info=$(echo "$BASE_THEMES" | jq --arg type "$THEME" '.[] | select(.type == $type)')
+   if [ -z "$theme_info" ]; then
+       echo "Error: Invalid theme $THEME"
+       exit 1
+   fi
+   download_and_convert "$theme_info"
+   name=$(echo "$theme_info" | jq -r '.name')
+   min_zoom=$(echo "$theme_info" | jq -r '.minZoom')
+   max_zoom=$(echo "$theme_info" | jq -r '.maxZoom')
+   echo "Convert: $name geojsonseq to PMtiles ...."
+   tippecanoe -o "$OUTPUT_DIR/pmtiles/$name.pmtiles" "$OUTPUT_DIR/geojson/$name.geojsonseq" --force --read-parallel -l "$name" -Z$min_zoom -z$max_zoom -rg --drop-densest-as-needed
+   echo "Complete : Mode - Single"
+fi

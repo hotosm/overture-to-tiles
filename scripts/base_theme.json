@@ -28,6 +28,8 @@
     },
     {
         "name": "base",
+        "minZoom": 8,
+        "maxZoom": 13,
         "layers": [
             {
                 "name": "land_use",
