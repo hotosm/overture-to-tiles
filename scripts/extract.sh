@@ -190,7 +190,7 @@ if $DELETE; then
 fi
 
 if [ -n "$S3_URL" ]; then
-    upload_to_s3 "$OUTPUT_DIR" "$S3_URL/$OUTPUT_DIR"
+    upload_to_s3 "$OUTPUT_DIR" "$S3_URL"
     # Uploaded to s3, remove original dir
     sudo rm -rf "$OUTPUT_DIR"
 fi
