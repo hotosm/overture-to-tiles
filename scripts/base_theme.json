@@ -16,15 +16,15 @@
         "name": "buildings",
         "theme": "buildings",
         "type": "building",
-        "minZoom": 13,
-        "maxZoom": 13
+        "minZoom": 12,
+        "maxZoom": 16
     },
     {
         "name": "roads",
         "theme": "transportation",
         "type": "segment",
         "minZoom": 10,
-        "maxZoom": 13
+        "maxZoom": 14
     },
     {
         "name": "base",
@@ -46,7 +46,7 @@
             {
                 "name": "land",
                 "type": "land",
-                "minZoom": 8,
+                "minZoom": 5,
                 "maxZoom": 13
             }
         ]
