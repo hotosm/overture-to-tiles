@@ -9,7 +9,8 @@ OUTPUT_DIR=${3:-"$(pwd)/output"}
 RELEASE=${4:-"2024-04-16-beta.0"}
 COMBINE=${5:-false} # Default is to create separate tiles per theme
 BASE_THEMES_PATH=${6:-"base_theme.json"} # Default path to base_themes.json
-
+S3_URL=${7:-""} # Default path to base_themes.json
+DELETE=${8:-true} 
 
 # Display the parameters supplied
 echo "Parameters supplied:"
@@ -19,6 +20,7 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Release: $RELEASE"
 echo "Combine: $COMBINE"
 echo "Base themes path: $BASE_THEMES_PATH"
+echo "S3 URL : $S3_URL"
 echo ""
 
 # Function to read themes from base_themes.json
@@ -84,6 +86,27 @@ download_and_convert() {
     if [ "$is_nested" = "false" ]; then
         processed_themes+=("$theme_info")
     fi
+}
+
+upload_to_s3() {
+    local output_dir=$1
+    local s3_url=$2
+
+    if [ -z "$s3_url" ]; then
+        echo "No S3 URL provided, skipping upload."
+        return
+    fi
+
+    echo "Uploading $output_dir to $s3_url..."
+
+    # Install AWS CLI if not already installed
+    if ! command -v aws &> /dev/null; then
+        echo "AWS CLI not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y awscli
+    fi
+
+    aws s3 cp --recursive "$output_dir" "$s3_url"
 }
 
 # Function to process nested entries
@@ -160,4 +183,14 @@ else
    echo "Convert: $name geojsonseq to PMtiles ...."
    tippecanoe -o "$OUTPUT_DIR/pmtiles/$name.pmtiles" "$OUTPUT_DIR/geojson/$name.geojsonseq" --force --read-parallel -l "$name" -Z$min_zoom -z$max_zoom -rg --drop-densest-as-needed
    echo "Complete : Mode - Single"
+fi
+if $DELETE; then 
+    # Remove geojson seq
+    sudo rm -rf "$OUTPUT_DIR/geojson"
+fi
+
+if [ -n "$S3_URL" ]; then
+    upload_to_s3 "$OUTPUT_DIR" "$S3_URL/$OUTPUT_DIR"
+    # Uploaded to s3, remove original dir
+    sudo rm -rf "$OUTPUT_DIR"
 fi
