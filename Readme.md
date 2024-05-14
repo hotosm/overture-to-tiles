@@ -21,7 +21,7 @@ s3://overturemaps-us-west-2/release/2024-04-16-beta.0/
 
 **Using overturemap python cli and tippecanoe [Recommended]**
 
-- Install [overturemap cli](https://github.com/OvertureMaps/overturemaps-py/tree/main) -> Downloads dataset from s3 to geojsonseq
+- Install [overturemap cli](https://github.com/kshitijrajsharma/overturemaps-py/tree/main) -> Downloads dataset from s3 to geojsonseq
   ```bash
   pip install git+https://github.com/kshitijrajsharma/overturemaps-py.git/@main
 - Install [tippecanoe](https://github.com/felt/tippecanoe) -> Converts geojsonseq to pmtiles , Install using [bash](./install/install-tippecanoe.sh)
