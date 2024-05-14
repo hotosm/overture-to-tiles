@@ -19,9 +19,12 @@ bash ./extract.sh "83.931770,28.172507,84.042320,28.263566" "" "pokhara" "" true
 
 ## Params : 
 ```
-"Bounding box: $1"
-"Theme: $2"
-"Output directory: $3"
-"Release: $4"
-"Combine: $5"
+BBOX=${1:-""} # No default bounding box
+THEME=${2:-"all"} # Default theme is "all"
+OUTPUT_DIR=${3:-"$(pwd)/output"}
+RELEASE=${4:-"2024-04-16-beta.0"}
+COMBINE=${5:-false} # Default is to create separate tiles per theme
+BASE_THEMES_PATH=${6:-"base_theme.json"} # Default path to base_themes.json
+S3_URL=${7:-""} # Default path to base_themes.json
+DELETE=${8:-true} 
 ```
