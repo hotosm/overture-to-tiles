@@ -1,0 +1,214 @@
+<html>
+  <head>
+    <title>PMTiles MapLibre Example</title>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/pmtiles@3.0.5/dist/pmtiles.js"></script>
+    <style>
+      body {
+        margin: 0;
+      }
+      #map {
+        height: 100%;
+        width: 100%;
+      }
+      #layer-control {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        font-family: Arial, sans-serif;
+        z-index: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="layer-control"></div>
+    <label>
+      <input id="show-attributes" type="checkbox" /> Show Attributes on Hover
+    </label>
+    <div id="map"></div>
+    <script type="module">
+      import {
+        Admins,
+        Buildings,
+        Places,
+        Transportation,
+        Land,
+        Landuse,
+        Water,
+      } from "./layers.js";
+
+      let protocol = new pmtiles.Protocol();
+      maplibregl.addProtocol("pmtiles", protocol.tile);
+
+      let BASE_URL =
+        "https://staging-raw-data-api.s3.amazonaws.com/default/overture/nepal/pmtiles";
+      let base_pmtile = BASE_URL + "/base.pmtiles";
+      const p = new pmtiles.PMTiles(base_pmtile);
+
+      // this is so we share one instance across the JS code and the map renderer
+      protocol.add(p);
+
+      // we first fetch the header so we can get the center lon, lat of the map.
+      p.getHeader().then((h) => {
+        const map = new maplibregl.Map({
+          container: "map",
+          zoom: h.maxZoom - 2,
+          center: [h.centerLon, h.centerLat],
+          style: {
+            version: 8,
+            light: { anchor: "viewport", color: "white", intensity: 0.8 },
+            glyphs:
+              "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+            sources: {
+              osm: {
+                type: "raster",
+                tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                tileSize: 256,
+                attribution: "&copy; OpenStreetMap Contributors",
+                maxzoom: 19,
+              },
+              roads: {
+                type: "vector",
+                url: `pmtiles://${BASE_URL}/roads.pmtiles`,
+              },
+              places: {
+                type: "vector",
+                url: `pmtiles://${BASE_URL}/places.pmtiles`,
+              },
+              placenames: {
+                type: "vector",
+                url: `pmtiles://${BASE_URL}/placenames.pmtiles`,
+              },
+              buildings: {
+                type: "vector",
+                url: `pmtiles://${BASE_URL}/buildings.pmtiles`,
+              },
+              base: {
+                type: "vector",
+                url: `pmtiles://${BASE_URL}/base.pmtiles`,
+              },
+            },
+            layers: [
+              {
+                id: "osm",
+                type: "raster",
+                source: "osm",
+              },
+              Land.land,
+              Land.sand,
+              Land.wetland,
+              Land.forest,
+              Landuse.recSand,
+              Landuse.parks,
+              Landuse.golfGreens,
+              Water.waterPolygons,
+              Water.waterLinestrings,
+              Transportation.footwayCasing,
+              Transportation.footway,
+              Transportation.parkingAisleUnknownCasing,
+              Transportation.residentialCasing,
+              Transportation.secondaryTertiaryCasing,
+              Transportation.primaryCasing,
+              Transportation.parkingAisleUnknown,
+              Transportation.residential,
+              Transportation.secondaryTertiary,
+              Transportation.primary,
+              Transportation.motorwayCasing,
+              Transportation.motorway,
+              Transportation.residentialLabel,
+              Transportation.highwayLabel,
+              Buildings,
+              Places,
+              Admins.placeHighZoom,
+              Admins.placeMidZoom,
+            ],
+          },
+        });
+
+        map.showTileBoundaries = true;
+
+        // Create a popup instance
+        const popup = new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+        });
+
+        // Add event listener for mousemove
+        map.on("mousemove", (e) => {
+          const features = map.queryRenderedFeatures(e.point);
+          if (
+            features.length > 0 &&
+            document.getElementById("show-attributes").checked
+          ) {
+            const feature = features[0];
+            const props = feature.properties;
+            let content = "";
+
+            for (const [key, value] of Object.entries(props)) {
+              content += `<div><strong>${key}:</strong> ${value}</div>`;
+            }
+
+            popup.setLngLat(e.lngLat).setHTML(content).addTo(map);
+          } else {
+            popup.remove();
+          }
+        });
+
+        // Create a layer control
+        const layerControl = document.getElementById("layer-control");
+        const layerNames = [
+          "Land",
+          "Landuse",
+          "Water",
+          "Transportation",
+          "Buildings",
+          "Places",
+          "Admins",
+        ];
+
+        layerNames.forEach((layerName) => {
+          const label = document.createElement("label");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = true;
+          checkbox.addEventListener("change", (e) => {
+            const visibility = e.target.checked ? "visible" : "none";
+            const layers = getLayersByName(map.getStyle().layers, layerName);
+            layers.forEach((layer) => {
+              map.setLayoutProperty(layer.id, "visibility", visibility);
+            });
+          });
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(layerName));
+          layerControl.appendChild(label);
+          layerControl.appendChild(document.createElement("br"));
+        });
+
+        // Helper function to get layers by name
+        function getLayersByName(layers, name) {
+          return layers.filter((layer) => {
+            if (layer.source && layer.source.includes(name.toLowerCase())) {
+              return true;
+            }
+            if (layer.id && layer.id.includes(name.toLowerCase())) {
+              return true;
+            }
+            return false;
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
