@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>PMTiles MapLibre Example</title>
+    <title>Overture Data Viewer</title>
     <meta charset="utf-8" />
     <link
       rel="stylesheet"
@@ -36,6 +36,9 @@
     <div id="layer-control"></div>
     <label>
       <input id="show-attributes" type="checkbox" /> Show Attributes on Hover
+    </label>
+    <label>
+      <input id="show-tile-boundaries" type="checkbox" /> Show Tile Boundaries
     </label>
     <div id="map"></div>
     <script type="module">
@@ -137,8 +140,12 @@
           },
         });
 
-        map.showTileBoundaries = true;
-
+        map.showTileBoundaries = false; // Initialize to false
+        document
+          .getElementById("show-tile-boundaries")
+          .addEventListener("change", (e) => {
+            map.showTileBoundaries = e.target.checked;
+          });
         // Create a popup instance
         const popup = new maplibregl.Popup({
           closeButton: false,
