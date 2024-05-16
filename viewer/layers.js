@@ -239,7 +239,12 @@ const Buildings = {
   source: "buildings",
   "source-layer": "buildings",
   paint: {
-    "fill-extrusion-color": building,
+    "fill-extrusion-color": [
+      "case",
+      ["in", "OpenStreetMap", ["get", "sources"]],
+      building, // Default color for OpenStreetMap buildings
+      "#FFC0CB", // Pink color for non-OpenStreetMap buildings
+    ],
     "fill-extrusion-opacity": 0.6,
     "fill-extrusion-base": 0,
     "fill-extrusion-height": [
@@ -256,7 +261,6 @@ const Places = {
   type: "symbol",
   source: "places",
   "source-layer": "places",
-  filter: ["all", ["has", "names.primary"], [">", ["get", "confidence"], 0.75]],
   minzoom: 15,
   maxzoom: 24,
   layout: {
