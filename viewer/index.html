@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Overture Data Viewer</title>
@@ -12,13 +13,16 @@
       crossorigin="anonymous"
     ></script>
     <script src="https://unpkg.com/pmtiles@3.0.5/dist/pmtiles.js"></script>
+    <script src="sync-maps.js"></script>
+
     <style>
       body {
         margin: 0;
       }
-      #map {
-        height: 100%;
-        width: 100%;
+      .map {
+        height: 400px;
+        width: 33.33%;
+        float: left;
       }
       #layer-control {
         position: absolute;
@@ -40,7 +44,11 @@
     <label>
       <input id="show-tile-boundaries" type="checkbox" /> Show Tile Boundaries
     </label>
-    <div id="map"></div>
+    <div id="comparison-container">
+      <div id="osm" class="map"></div>
+      <div id="overture" class="map"></div>
+      <div id="satellite" class="map"></div>
+    </div>
     <script type="module">
       import {
         Admins,
@@ -65,15 +73,11 @@
 
       // we first fetch the header so we can get the center lon, lat of the map.
       p.getHeader().then((h) => {
-        const map = new maplibregl.Map({
-          container: "map",
-          zoom: h.maxZoom - 2,
-          center: [h.centerLon, h.centerLat],
+        // OSM map
+        const osmMap = new maplibregl.Map({
+          container: "osm",
           style: {
             version: 8,
-            light: { anchor: "viewport", color: "white", intensity: 0.8 },
-            glyphs:
-              "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
             sources: {
               osm: {
                 type: "raster",
@@ -82,6 +86,55 @@
                 attribution: "&copy; OpenStreetMap Contributors",
                 maxzoom: 19,
               },
+            },
+            layers: [
+              {
+                id: "osm",
+                type: "raster",
+                source: "osm",
+              },
+            ],
+          },
+          center: [h.centerLon, h.centerLat],
+          zoom: h.maxZoom - 2,
+        });
+
+        const satellite = new maplibregl.Map({
+          container: "satellite",
+          style: {
+            version: 8,
+            sources: {
+              osm: {
+                type: "raster",
+                tiles: ["https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"],
+                tileSize: 256,
+                attribution: "&copy; Google",
+                maxzoom: 19,
+              },
+            },
+            layers: [
+              {
+                id: "osm",
+                type: "raster",
+                source: "osm",
+              },
+            ],
+          },
+          center: [h.centerLon, h.centerLat],
+          zoom: h.maxZoom - 2,
+        });
+
+        // Your custom map
+        const map = new maplibregl.Map({
+          container: "overture",
+          zoom: h.maxZoom - 2,
+          center: [h.centerLon, h.centerLat],
+          style: {
+            version: 8,
+            light: { anchor: "viewport", color: "white", intensity: 0.8 },
+            glyphs:
+              "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+            sources: {
               roads: {
                 type: "vector",
                 url: `pmtiles://${BASE_URL}/roads.pmtiles`,
@@ -104,11 +157,6 @@
               },
             },
             layers: [
-              {
-                id: "osm",
-                type: "raster",
-                source: "osm",
-              },
               Land.land,
               Land.sand,
               Land.wetland,
@@ -146,6 +194,7 @@
           .addEventListener("change", (e) => {
             map.showTileBoundaries = e.target.checked;
           });
+
         // Create a popup instance
         const popup = new maplibregl.Popup({
           closeButton: false,
@@ -215,6 +264,7 @@
             return false;
           });
         }
+        const stopSync = syncMaps(osmMap, map, satellite);
       });
     </script>
   </body>
