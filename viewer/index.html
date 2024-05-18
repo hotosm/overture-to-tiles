@@ -20,35 +20,73 @@
         margin: 0;
       }
       .map {
-        height: 400px;
-        width: 33.33%;
+        height: 30vh;
+        width: 50%;
         float: left;
+      }
+
+      #overture-container {
+        width: 100%;
+        height: 70vh;
+        position: relative;
+      }
+
+      #overture {
+        width: 100%;
+        height: 100%;
+      }
+
+      #map-controls {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        z-index: 1; /* Ensure controls are on top */
       }
       #layer-control {
         position: absolute;
-        top: 10px;
+        top: 50px;
         right: 10px;
+        width: 350px;
         background-color: rgba(255, 255, 255, 0.8);
         padding: 10px;
         font-family: Arial, sans-serif;
         z-index: 1;
+      }
+      .layer-group {
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 5px;
+      }
+      .layer-group-header {
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .layer-group-content {
+        padding-left: 20px;
+        display: none;
       }
     </style>
   </head>
 
   <body>
     <div id="layer-control"></div>
-    <label>
-      <input id="show-attributes" type="checkbox" /> Show Attributes on Hover
-    </label>
-    <label>
-      <input id="show-tile-boundaries" type="checkbox" /> Show Tile Boundaries
-    </label>
-    <div id="comparison-container">
-      <div id="osm" class="map"></div>
-      <div id="overture" class="map"></div>
-      <div id="satellite" class="map"></div>
+    <div id="map-controls">
+      <label>
+        <input id="show-attributes" type="checkbox" /> Show Attributes on Hover
+      </label>
+      <label>
+        <input id="show-tile-boundaries" type="checkbox" /> Show Tile Boundaries
+      </label>
     </div>
+    <div id="overture-container">
+      <div id="overture" class="map"></div>
+    </div>
+    <div id="osm" class="map"></div>
+    <div id="satellite" class="map"></div>
+
     <script type="module">
       import {
         Admins,
@@ -106,9 +144,11 @@
             sources: {
               osm: {
                 type: "raster",
-                tiles: ["https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"],
+                tiles: [
+                  "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                ],
                 tileSize: 256,
-                attribution: "&copy; Google",
+                attribution: "&copy; ArcGIS World Imagery",
                 maxzoom: 19,
               },
             },
@@ -221,49 +261,147 @@
             popup.remove();
           }
         });
+        const layerGroups = {
+          Overture: {
+            layers: [],
+            children: [
+              "Land",
+              "Landuse",
+              "Water",
+              "Transportation",
+              "Buildings",
+              "Places",
+              "Admins",
+            ],
+          },
+          Land: {
+            layers: [Land.land, Land.sand, Land.wetland, Land.forest],
+            children: [],
+          },
+          Landuse: {
+            layers: [Landuse.recSand, Landuse.parks, Landuse.golfGreens],
+            children: [],
+          },
+          Water: {
+            layers: [Water.waterPolygons, Water.waterLinestrings],
+            children: [],
+          },
+          Transportation: {
+            layers: [
+              Transportation.footwayCasing,
+              Transportation.footway,
+              Transportation.parkingAisleUnknownCasing,
+              Transportation.residentialCasing,
+              Transportation.secondaryTertiaryCasing,
+              Transportation.primaryCasing,
+              Transportation.parkingAisleUnknown,
+              Transportation.residential,
+              Transportation.secondaryTertiary,
+              Transportation.primary,
+              Transportation.motorwayCasing,
+              Transportation.motorway,
+              Transportation.residentialLabel,
+              Transportation.highwayLabel,
+            ],
+            children: [],
+          },
+          Buildings: {
+            layers: [Buildings],
+            children: [],
+          },
+          Places: {
+            layers: [Places],
+            children: [],
+          },
+          Admins: {
+            layers: [Admins.placeHighZoom, Admins.placeMidZoom],
+            children: [],
+          },
+        };
 
         // Create a layer control
         const layerControl = document.getElementById("layer-control");
-        const layerNames = [
-          "Land",
-          "Landuse",
-          "Water",
-          "Transportation",
-          "Buildings",
-          "Places",
-          "Admins",
-        ];
 
-        layerNames.forEach((layerName) => {
-          const label = document.createElement("label");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = true;
-          checkbox.addEventListener("change", (e) => {
+        // Function to create a nested layer group
+        const createNestedLayerGroup = (groupName, isNested = false) => {
+          const group = layerGroups[groupName];
+          const groupDiv = document.createElement("div");
+          groupDiv.classList.add("layer-group");
+
+          const headerDiv = document.createElement("div");
+          headerDiv.classList.add("layer-group-header");
+
+          const masterCheckbox = document.createElement("input");
+          masterCheckbox.type = "checkbox";
+          masterCheckbox.checked = true;
+          masterCheckbox.addEventListener("change", (e) => {
             const visibility = e.target.checked ? "visible" : "none";
-            const layers = getLayersByName(map.getStyle().layers, layerName);
-            layers.forEach((layer) => {
-              map.setLayoutProperty(layer.id, "visibility", visibility);
-            });
+            toggleLayerVisibility(group.layers, visibility);
+            if (!isNested) {
+              group.children.forEach((childGroupName) => {
+                const childGroup = layerGroups[childGroupName];
+                const nestedCheckboxes = groupDiv.querySelectorAll(
+                  `.layer-group-content input[type='checkbox']`
+                );
+                nestedCheckboxes.forEach((checkbox) => {
+                  checkbox.checked = e.target.checked;
+                  toggleLayerVisibility(childGroup.layers, visibility);
+                });
+              });
+            }
           });
-          label.appendChild(checkbox);
-          label.appendChild(document.createTextNode(layerName));
-          layerControl.appendChild(label);
-          layerControl.appendChild(document.createElement("br"));
-        });
 
-        // Helper function to get layers by name
-        function getLayersByName(layers, name) {
-          return layers.filter((layer) => {
-            if (layer.source && layer.source.includes(name.toLowerCase())) {
-              return true;
-            }
-            if (layer.id && layer.id.includes(name.toLowerCase())) {
-              return true;
-            }
-            return false;
+          const headerLabel = document.createElement("label");
+          headerLabel.appendChild(masterCheckbox);
+          headerLabel.appendChild(document.createTextNode(groupName));
+
+          headerDiv.appendChild(headerLabel);
+
+          const contentDiv = document.createElement("div");
+          contentDiv.classList.add("layer-group-content");
+          contentDiv.style.display = isNested ? "none" : "block";
+
+          headerDiv.addEventListener("click", () => {
+            contentDiv.style.display =
+              contentDiv.style.display === "none" ? "block" : "none";
           });
-        }
+
+          if (!isNested) {
+            group.children.forEach((childGroupName) => {
+              const childGroup = createNestedLayerGroup(childGroupName, true);
+              contentDiv.appendChild(childGroup);
+            });
+          } else {
+            group.layers.forEach((layer) => {
+              const label = document.createElement("label");
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = true;
+              checkbox.addEventListener("change", (e) => {
+                const visibility = e.target.checked ? "visible" : "none";
+                map.setLayoutProperty(layer.id, "visibility", visibility);
+              });
+              label.appendChild(checkbox);
+              label.appendChild(document.createTextNode(layer.id));
+              contentDiv.appendChild(label);
+            });
+          }
+
+          groupDiv.appendChild(headerDiv);
+          groupDiv.appendChild(contentDiv);
+          layerControl.appendChild(groupDiv);
+
+          return groupDiv;
+        };
+
+        // Helper function to toggle layer visibility
+        const toggleLayerVisibility = (layers, visibility) => {
+          layers.forEach((layer) => {
+            map.setLayoutProperty(layer.id, "visibility", visibility);
+          });
+        };
+
+        createNestedLayerGroup("Overture");
         const stopSync = syncMaps(osmMap, map, satellite);
       });
     </script>
