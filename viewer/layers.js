@@ -232,27 +232,45 @@ const Admins = {
 };
 
 const Buildings = {
-  id: "buildings",
-  type: "fill-extrusion",
-  minzoom: 12,
-  maxzoom: 24,
-  source: "buildings",
-  "source-layer": "buildings",
-  paint: {
-    "fill-extrusion-color": [
-      "case",
-      ["in", "OpenStreetMap", ["get", "sources"]],
-      building, // Default color for OpenStreetMap buildings
-      "#FFC0CB", // Pink color for non-OpenStreetMap buildings
-    ],
-    "fill-extrusion-opacity": 0.6,
-    "fill-extrusion-base": 0,
-    "fill-extrusion-height": [
-      "case",
-      ["has", "height"],
-      ["to-number", ["get", "height"]],
-      3.2,
-    ],
+  osmBuildings: {
+    id: "osm-buildings",
+    type: "fill-extrusion",
+    minzoom: 12,
+    maxzoom: 24,
+    source: "buildings",
+    "source-layer": "buildings",
+    filter: ["in", "OpenStreetMap", ["get", "sources"]],
+    paint: {
+      "fill-extrusion-color": building, // Default color for OpenStreetMap buildings
+      "fill-extrusion-opacity": 0.6,
+      "fill-extrusion-base": 0,
+      "fill-extrusion-height": [
+        "case",
+        ["has", "height"],
+        ["to-number", ["get", "height"]],
+        3.2,
+      ],
+    },
+  },
+  nonOsmBuildings: {
+    id: "non-osm-buildings",
+    type: "fill-extrusion",
+    minzoom: 12,
+    maxzoom: 24,
+    source: "buildings",
+    "source-layer": "buildings",
+    filter: ["!", ["in", "OpenStreetMap", ["get", "sources"]]],
+    paint: {
+      "fill-extrusion-color": "#FFC0CB", // Pink color for non-OpenStreetMap buildings
+      "fill-extrusion-opacity": 0.6,
+      "fill-extrusion-base": 0,
+      "fill-extrusion-height": [
+        "case",
+        ["has", "height"],
+        ["to-number", ["get", "height"]],
+        3.2,
+      ],
+    },
   },
 };
 

@@ -24,7 +24,7 @@
         "theme": "transportation",
         "type": "segment",
         "minZoom": 10,
-        "maxZoom": 14
+        "maxZoom": 16
     },
     {
         "name": "base",

@@ -142,21 +142,21 @@
           style: {
             version: 8,
             sources: {
-              osm: {
+              satellite: {
                 type: "raster",
                 tiles: [
                   "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
                 ],
                 tileSize: 256,
                 attribution: "&copy; ArcGIS World Imagery",
-                maxzoom: 19,
+                maxzoom: 18,
               },
             },
             layers: [
               {
-                id: "osm",
+                id: "satellite",
                 type: "raster",
-                source: "osm",
+                source: "satellite",
               },
             ],
           },
@@ -195,8 +195,34 @@
                 type: "vector",
                 url: `pmtiles://${BASE_URL}/base.pmtiles`,
               },
+              osm: {
+                type: "raster",
+                tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                tileSize: 256,
+                attribution: "&copy; OpenStreetMap Contributors",
+                maxzoom: 19,
+              },
+              satellite: {
+                type: "raster",
+                tiles: [
+                  "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                ],
+                tileSize: 256,
+                attribution: "&copy; ArcGIS World Imagery",
+                maxzoom: 18,
+              },
             },
             layers: [
+              {
+                id: "osm",
+                type: "raster",
+                source: "osm",
+              },
+              {
+                id: "satellite",
+                type: "raster",
+                source: "satellite",
+              },
               Land.land,
               Land.sand,
               Land.wetland,
@@ -220,7 +246,8 @@
               Transportation.motorway,
               Transportation.residentialLabel,
               Transportation.highwayLabel,
-              Buildings,
+              Buildings.osmBuildings,
+              Buildings.nonOsmBuildings,
               Places,
               Admins.placeHighZoom,
               Admins.placeMidZoom,
@@ -274,6 +301,26 @@
               "Admins",
             ],
           },
+          OSM: {
+            layers: [
+              {
+                id: "osm",
+                type: "raster",
+                source: "osm",
+              },
+            ],
+            children: [],
+          },
+          Satellite: {
+            layers: [
+              {
+                id: "satellite",
+                type: "raster",
+                source: "satellite",
+              },
+            ],
+            children: [],
+          },
           Land: {
             layers: [Land.land, Land.sand, Land.wetland, Land.forest],
             children: [],
@@ -306,7 +353,7 @@
             children: [],
           },
           Buildings: {
-            layers: [Buildings],
+            layers: [Buildings.osmBuildings, Buildings.nonOsmBuildings],
             children: [],
           },
           Places: {
@@ -402,6 +449,9 @@
         };
 
         createNestedLayerGroup("Overture");
+        createNestedLayerGroup("OSM");
+        createNestedLayerGroup("Satellite");
+
         const stopSync = syncMaps(osmMap, map, satellite);
       });
     </script>
