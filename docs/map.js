@@ -121,6 +121,16 @@ p.getHeader().then((h) => {
         },
       },
       layers: [
+        {
+          id: "osm",
+          type: "raster",
+          source: "osm",
+        },
+        {
+          id: "satellite",
+          type: "raster",
+          source: "satellite",
+        },
         Land.land,
         Land.sand,
         Land.wetland,
