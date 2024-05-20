@@ -48,6 +48,13 @@
                 "type": "land",
                 "minZoom": 5,
                 "maxZoom": 13
+            },
+            {
+                "name": "land_cover",
+                "theme": "base",
+                "type": "land_cover",
+                "minZoom": 5,
+                "maxZoom": 13
             }
         ]
     }
