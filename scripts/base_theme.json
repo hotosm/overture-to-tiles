@@ -34,8 +34,8 @@
     },
     {
         "name": "base",
-        "minZoom": 8,
-        "maxZoom": 13,
+        "minZoom": 5,
+        "maxZoom": 14,
         "layers": [
             {
                 "name": "land_use",
@@ -47,7 +47,7 @@
                 "name": "water",
                 "type": "water",
                 "minZoom": 8,
-                "maxZoom": 13
+                "maxZoom": 14
             },
             {
                 "name": "land",
@@ -60,7 +60,7 @@
                 "theme": "base",
                 "type": "land_cover",
                 "minZoom": 5,
-                "maxZoom": 13
+                "maxZoom": 14
             }
         ]
     }
