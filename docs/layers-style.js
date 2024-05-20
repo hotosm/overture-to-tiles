@@ -13,6 +13,7 @@ var roadMajor = "#95b2d0";
 var roadLabel = "#071F3F";
 var placeLabel = "#071F3F";
 var placeCasing = "#dce6ef";
+var boundary = "#ff6961 ";
 
 const Admins = {
   placeHighZoom: {
@@ -227,6 +228,17 @@ const Admins = {
       "text-color": placeLabel,
       "text-halo-color": placeCasing,
       "text-halo-width": 1,
+    },
+  },
+  boundary: {
+    id: "boundary",
+    type: "line",
+    minzoom: 4,
+    maxzoom: 10,
+    source: "boundary",
+    "source-layer": "boundary",
+    paint: {
+      "line-color": boundary,
     },
   },
 };

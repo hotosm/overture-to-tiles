@@ -1,10 +1,32 @@
-import { allLayers } from "./layers.js";
-import { layerOrder } from "./layers.js";
+let allLayers;
+let layerOrder;
+
+import {
+  allLayers as localAllLayers,
+  layerOrder as localLayerOrder,
+} from "./layers-style.js";
+
 let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const urlParams = new URLSearchParams(window.location.search);
 const BASE_URL = urlParams.get("url");
+
+const STYLE_FILE = urlParams.get("style");
+
+if (STYLE_FILE) {
+  import(STYLE_FILE)
+    .then((module) => {
+      allLayers = module.allLayers;
+      layerOrder = module.layerOrder;
+    })
+    .catch((error) => {
+      console.error("Error importing module from URL:", error);
+    });
+} else {
+  allLayers = localAllLayers;
+  layerOrder = localLayerOrder;
+}
 
 if (BASE_URL) {
   let base_pmtile = BASE_URL + "/base.pmtiles";
@@ -89,6 +111,10 @@ if (BASE_URL) {
           buildings: {
             type: "vector",
             url: `pmtiles://${BASE_URL}/buildings.pmtiles`,
+          },
+          boundary: {
+            type: "vector",
+            url: `pmtiles://${BASE_URL}/boundary.pmtiles`,
           },
           base: {
             type: "vector",

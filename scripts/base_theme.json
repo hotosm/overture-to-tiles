@@ -29,8 +29,8 @@
     {
         "name": "boundary",
         "type": "administrative_boundary",
-        "minZoom": 5,
-        "maxZoom": 12
+        "minZoom": 4,
+        "maxZoom": 8
     },
     {
         "name": "base",
