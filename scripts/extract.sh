@@ -6,7 +6,7 @@ set -e
 BBOX=${1:-""} # No default bounding box
 THEME=${2:-"all"} # Default theme is "all"
 OUTPUT_DIR=${3:-"$(pwd)/output"}
-RELEASE=${4:-"2024-04-16-beta.0"}
+RELEASE=${4:-"2024-05-16-beta.0"}
 COMBINE=${5:-false} # Default is to create separate tiles per theme
 BASE_THEMES_PATH=${6:-"base_theme.json"} # Default path to base_themes.json
 S3_URL=${7:-""} # Default path to base_themes.json
