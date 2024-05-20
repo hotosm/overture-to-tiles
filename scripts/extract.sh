@@ -6,7 +6,7 @@ set -e
 BBOX=${1:-""} # No default bounding box
 THEME=${2:-"all"} # Default theme is "all"
 OUTPUT_DIR=${3:-"$(pwd)/output"}
-RELEASE=${4:-"2024-04-16-beta.0"}
+RELEASE=${4:-"2024-05-16-beta.0"}
 COMBINE=${5:-false} # Default is to create separate tiles per theme
 BASE_THEMES_PATH=${6:-"base_theme.json"} # Default path to base_themes.json
 S3_URL=${7:-""} # Default path to base_themes.json
@@ -54,28 +54,28 @@ download_and_convert() {
         if [ -n "$theme" ]; then
             if [ -n "$type" ]; then
                 echo "Download: $type , bbox:true , theme:$theme ...."
-                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -cty "$type" -o "$output_file_parquet"
+                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -cty "$type" -o "$output_file_parquet" -r "$RELEASE"
             else
                 echo "Download: bbox:true , theme:$theme ...."
                 
-                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -o "$output_file_parquet"
+                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -o "$output_file_parquet" -r "$RELEASE"
             fi
         else
             echo "Download: $type , bbox:true ...."
-            overturemaps download -f geoparquet --type="$type" --bbox "$BBOX" -o "$output_file_parquet"
+            overturemaps download -f geoparquet --type="$type" --bbox "$BBOX" -o "$output_file_parquet" -r "$RELEASE"
         fi
     else
         if [ -n "$theme" ]; then
             if [ -n "$type" ]; then
                 echo "Download: $type, bbox:false , theme:$theme ...."
-                overturemaps download -f geoparquet -cth "$theme" -cty "$type" -o "$output_file_parquet"
+                overturemaps download -f geoparquet -cth "$theme" -cty "$type" -o "$output_file_parquet" -r "$RELEASE"
             else
                 echo "Download: bbox:false , theme:$theme ...."
-                overturemaps download -f geoparquet -cth "$theme" -o "$output_file_parquet"
+                overturemaps download -f geoparquet -cth "$theme" -o "$output_file_parquet" -r "$RELEASE"
             fi
         else
             echo "Download: $type, bbox:false ...."
-            overturemaps download -f geoparquet --type="$type" -o "$output_file_parquet"
+            overturemaps download -f geoparquet --type="$type" -o "$output_file_parquet" -r "$RELEASE"
         fi
     fi
 
