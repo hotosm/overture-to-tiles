@@ -889,4 +889,22 @@ const Water = {
   },
 };
 
-export { Admins, Buildings, Places, Transportation, Land, Landuse, Water };
+export const layerOrder = [
+  "Land",
+  "Landuse",
+  "Water",
+  "Transportation",
+  "Buildings",
+  "Places",
+  "Admins",
+];
+
+export const allLayers = {
+  Land,
+  Landuse,
+  Water,
+  Transportation,
+  Buildings,
+  Places,
+  Admins,
+};

@@ -1,13 +1,5 @@
-import {
-  Admins,
-  Buildings,
-  Places,
-  Transportation,
-  Land,
-  Landuse,
-  Water,
-} from "./layers.js";
-
+import { allLayers } from "./layers.js";
+import { layerOrder } from "./layers.js";
 let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
@@ -130,34 +122,7 @@ if (BASE_URL) {
             type: "raster",
             source: "osm",
           },
-          Land.land,
-          Land.sand,
-          Land.wetland,
-          Land.forest,
-          Landuse.recSand,
-          Landuse.parks,
-          Landuse.golfGreens,
-          Water.waterPolygons,
-          Water.waterLinestrings,
-          Transportation.footwayCasing,
-          Transportation.footway,
-          Transportation.parkingAisleUnknownCasing,
-          Transportation.residentialCasing,
-          Transportation.secondaryTertiaryCasing,
-          Transportation.primaryCasing,
-          Transportation.parkingAisleUnknown,
-          Transportation.residential,
-          Transportation.secondaryTertiary,
-          Transportation.primary,
-          Transportation.motorwayCasing,
-          Transportation.motorway,
-          Transportation.residentialLabel,
-          Transportation.highwayLabel,
-          Buildings.osmBuildings,
-          Buildings.nonOsmBuildings,
-          Places,
-          Admins.placeHighZoom,
-          Admins.placeMidZoom,
+          ...addLayers(allLayers, layerOrder),
         ],
       },
     });
@@ -189,83 +154,8 @@ if (BASE_URL) {
       }
     });
 
-    const layerGroups = {
-      Overture: {
-        layers: [],
-        children: [
-          "Land",
-          "Landuse",
-          "Water",
-          "Transportation",
-          "Buildings",
-          "Places",
-          "Admins",
-        ],
-      },
-      OSM: {
-        layers: [
-          {
-            id: "osm",
-            type: "raster",
-            source: "osm",
-          },
-        ],
-        children: [],
-      },
-      Satellite: {
-        layers: [
-          {
-            id: "satellite",
-            type: "raster",
-            source: "satellite",
-          },
-        ],
-        children: [],
-      },
-      Land: {
-        layers: [Land.land, Land.sand, Land.wetland, Land.forest],
-        children: [],
-      },
-      Landuse: {
-        layers: [Landuse.recSand, Landuse.parks, Landuse.golfGreens],
-        children: [],
-      },
-      Water: {
-        layers: [Water.waterPolygons, Water.waterLinestrings],
-        children: [],
-      },
-      Transportation: {
-        layers: [
-          Transportation.footwayCasing,
-          Transportation.footway,
-          Transportation.parkingAisleUnknownCasing,
-          Transportation.residentialCasing,
-          Transportation.secondaryTertiaryCasing,
-          Transportation.primaryCasing,
-          Transportation.parkingAisleUnknown,
-          Transportation.residential,
-          Transportation.secondaryTertiary,
-          Transportation.primary,
-          Transportation.motorwayCasing,
-          Transportation.motorway,
-          Transportation.residentialLabel,
-          Transportation.highwayLabel,
-        ],
-        children: [],
-      },
-      Buildings: {
-        layers: [Buildings.osmBuildings, Buildings.nonOsmBuildings],
-        children: [],
-      },
-      Places: {
-        layers: [Places],
-        children: [],
-      },
-      Admins: {
-        layers: [Admins.placeHighZoom, Admins.placeMidZoom],
-        children: [],
-      },
-    };
+    const layerGroups = constructLayerGroups(allLayers, layerOrder);
+    console.log(layerGroups);
 
     const layerControl = document.getElementById("layer-control");
     const createNestedLayerGroup = (groupName, isNested = false) => {
@@ -351,4 +241,83 @@ if (BASE_URL) {
 
     const stopSync = syncMaps(osmMap, map, satellite);
   });
+}
+
+function addLayers(layersObject, order = [], nested = false) {
+  const layersArray = [];
+
+  if (nested) {
+    for (const key in layersObject) {
+      const value = layersObject[key];
+      if (typeof value === "object") {
+        if (Array.isArray(value)) {
+          layersArray.push(...value);
+        } else if (value.hasOwnProperty("id")) {
+          layersArray.push(value);
+        } else {
+          layersArray.push(...addLayers(value, [], true));
+        }
+      }
+    }
+  } else {
+    for (const key of order) {
+      if (key in layersObject) {
+        const value = layersObject[key];
+        if (typeof value === "object") {
+          if (Array.isArray(value)) {
+            layersArray.push(...value);
+          } else if (value.hasOwnProperty("id")) {
+            // If the value has an 'id' property, it's a single layer object
+            layersArray.push(value);
+          } else {
+            layersArray.push(...addLayers(value, [], true));
+          }
+        }
+      }
+    }
+  }
+  return layersArray;
+}
+
+function constructLayerGroups(layersObject, order) {
+  const layerGroups = {
+    Overture: {
+      layers: [],
+      children: order,
+    },
+    OSM: {
+      layers: [
+        {
+          id: "osm",
+          type: "raster",
+          source: "osm",
+        },
+      ],
+      children: [],
+    },
+    Satellite: {
+      layers: [
+        {
+          id: "satellite",
+          type: "raster",
+          source: "satellite",
+        },
+      ],
+      children: [],
+    },
+  };
+
+  for (const key of order) {
+    if (key in layersObject) {
+      const value = layersObject[key];
+      const layersArray = addLayers({ [key]: value }, [], true);
+
+      layerGroups[key] = {
+        layers: layersArray,
+        children: [],
+      };
+    }
+  }
+
+  return layerGroups;
 }
