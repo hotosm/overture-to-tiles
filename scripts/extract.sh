@@ -54,28 +54,28 @@ download_and_convert() {
         if [ -n "$theme" ]; then
             if [ -n "$type" ]; then
                 echo "Download: $type , bbox:true , theme:$theme ...."
-                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -cty "$type" -o "$output_file_parquet"
+                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -cty "$type" -o "$output_file_parquet" -r "$RELEASE"
             else
                 echo "Download: bbox:true , theme:$theme ...."
                 
-                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -o "$output_file_parquet"
+                overturemaps download -f geoparquet --bbox "$BBOX" -cth "$theme" -o "$output_file_parquet" -r "$RELEASE"
             fi
         else
             echo "Download: $type , bbox:true ...."
-            overturemaps download -f geoparquet --type="$type" --bbox "$BBOX" -o "$output_file_parquet"
+            overturemaps download -f geoparquet --type="$type" --bbox "$BBOX" -o "$output_file_parquet" -r "$RELEASE"
         fi
     else
         if [ -n "$theme" ]; then
             if [ -n "$type" ]; then
                 echo "Download: $type, bbox:false , theme:$theme ...."
-                overturemaps download -f geoparquet -cth "$theme" -cty "$type" -o "$output_file_parquet"
+                overturemaps download -f geoparquet -cth "$theme" -cty "$type" -o "$output_file_parquet" -r "$RELEASE"
             else
                 echo "Download: bbox:false , theme:$theme ...."
-                overturemaps download -f geoparquet -cth "$theme" -o "$output_file_parquet"
+                overturemaps download -f geoparquet -cth "$theme" -o "$output_file_parquet" -r "$RELEASE"
             fi
         else
             echo "Download: $type, bbox:false ...."
-            overturemaps download -f geoparquet --type="$type" -o "$output_file_parquet"
+            overturemaps download -f geoparquet --type="$type" -o "$output_file_parquet" -r "$RELEASE"
         fi
     fi
 
