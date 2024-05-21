@@ -214,7 +214,7 @@ if (BASE_URL) {
     });
 
     const layerGroups = constructLayerGroups(allLayers, layerOrder);
-    console.log(layerGroups);
+    // console.log(JSON.stringify(layerGroups, null, 2));
 
     const layerControl = document.getElementById("layer-control");
     const createNestedLayerGroup = (groupName, isNested = false) => {
@@ -275,8 +275,26 @@ if (BASE_URL) {
             const visibility = e.target.checked ? "visible" : "none";
             map.setLayoutProperty(layer.id, "visibility", visibility);
           });
+          const colorBox = document.createElement("span");
+          colorBox.style.display = "inline-block";
+          colorBox.style.width = "15px";
+          colorBox.style.height = "15px";
+          const colorKey = Object.keys(layer.paint).find((key) =>
+            key.toLowerCase().includes("color")
+          );
+
+          if (colorKey) {
+            colorBox.style.backgroundColor = layer.paint[colorKey];
+          } else {
+            colorBox.style.backgroundColor = "#ccc";
+          }
+          colorBox.style.marginRight = "5px";
+
+          const layerName = document.createTextNode(layer.id);
+
           label.appendChild(checkbox);
-          label.appendChild(document.createTextNode(layer.id));
+          label.appendChild(colorBox);
+          label.appendChild(layerName);
           contentDiv.appendChild(label);
         });
       }
