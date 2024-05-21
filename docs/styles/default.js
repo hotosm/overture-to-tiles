@@ -260,6 +260,8 @@ const Buildings = {
         "case",
         ["has", "height"],
         ["to-number", ["get", "height"]],
+        ["has", "num_floors"],
+        ["*", ["to-number", ["get", "num_floors"]], 5],
         3.2,
       ],
     },
