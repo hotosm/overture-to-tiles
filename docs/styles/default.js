@@ -609,7 +609,7 @@ const Transportation = {
     "source-layer": "roads",
     minzoom: 8,
     maxzoom: 24,
-    filter: ["match", ["get", "class"], ["primary"], true, false],
+    filter: ["match", ["get", "class"], ["primary", "trunk"], true, false],
     layout: {
       "line-cap": ["step", ["zoom"], "butt", 13, "round"],
       "line-join": ["step", ["zoom"], "miter", 13, "round"],
