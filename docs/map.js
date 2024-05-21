@@ -154,7 +154,11 @@ if (BASE_URL) {
     });
 
     map.showTileBoundaries = false;
-
+    document
+      .getElementById("show-tile-boundaries")
+      .addEventListener("change", (e) => {
+        map.showTileBoundaries = e.target.checked;
+      });
     const popup = new maplibregl.Popup({
       closeButton: false,
       closeOnClick: false,
