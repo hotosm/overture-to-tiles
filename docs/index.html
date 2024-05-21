@@ -68,6 +68,33 @@
         padding-left: 20px;
         display: none;
       }
+
+      .maplibregl-popup-content {
+        width: 400px;
+      }
+      .popup-container {
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        padding: 1px;
+      }
+
+      .popup-section {
+        padding: 1px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid #ccc; /* Added border-bottom */
+      }
+
+      .popup-section:last-child {
+        border-bottom: none;
+      }
+
+      .popup-section div {
+        margin-bottom: 2px;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+      }
     </style>
   </head>
 

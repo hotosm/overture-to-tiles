@@ -159,24 +159,53 @@ if (BASE_URL) {
       closeButton: false,
       closeOnClick: false,
     });
+    let fixedPopup = false;
 
     map.on("mousemove", (e) => {
-      const features = map.queryRenderedFeatures(e.point);
-      if (
-        features.length > 0 &&
-        document.getElementById("show-attributes").checked
-      ) {
-        const feature = features[0];
-        const props = feature.properties;
-        let content = "";
+      if (!fixedPopup) {
+        const features = map.queryRenderedFeatures(e.point);
 
-        for (const [key, value] of Object.entries(props)) {
-          content += `<div><strong>${key}:</strong> ${value}</div>`;
+        if (
+          features.length > 0 &&
+          document.getElementById("show-attributes").checked
+        ) {
+          let content = '<div class="popup-container">';
+
+          for (const feature of features) {
+            const props = feature.properties;
+            content += '<div class="popup-section">';
+
+            for (const [key, value] of Object.entries(props)) {
+              if (!["id", "version"].includes(key)) {
+                content += `<div><strong>${key}:</strong> ${value}</div>`;
+              }
+            }
+
+            content += "</div>";
+          }
+
+          content += "</div>";
+
+          popup.setLngLat(e.lngLat).setHTML(content).addTo(map);
         }
-
-        popup.setLngLat(e.lngLat).setHTML(content).addTo(map);
+      }
+    });
+    document
+      .getElementById("show-attributes")
+      .addEventListener("click", function () {
+        if (!this.checked) {
+          popup.remove();
+        }
+      });
+    map.on("mouseleave", function (e) {
+      if (fixedPopup) return;
+      popup.remove();
+    });
+    map.on("click", function (e) {
+      if (fixedPopup) {
+        fixedPopup = false;
       } else {
-        popup.remove();
+        fixedPopup = true;
       }
     });
 
