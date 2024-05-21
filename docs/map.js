@@ -4,7 +4,7 @@ let layerOrder;
 import {
   allLayers as localAllLayers,
   layerOrder as localLayerOrder,
-} from "./layers-style.js";
+} from "./styles/default.js";
 
 let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
