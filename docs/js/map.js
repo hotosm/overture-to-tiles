@@ -4,8 +4,8 @@ let layerOrder;
 import {
   allLayers as localAllLayers,
   layerOrder as localLayerOrder,
-} from "./styles/default.js";
-
+} from "../styles/default.js";
+import { addLayers, constructLayerGroups } from "./utils.js";
 let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
@@ -33,6 +33,22 @@ if (BASE_URL) {
   const p = new pmtiles.PMTiles(base_pmtile);
 
   protocol.add(p);
+  let satellite_source = {
+    type: "raster",
+    tiles: [
+      "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    ],
+    tileSize: 256,
+    attribution: "&copy; ArcGIS World Imagery",
+    maxzoom: 18,
+  };
+  let osm_source = {
+    type: "raster",
+    tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+    tileSize: 256,
+    attribution: "&copy; OpenStreetMap Contributors",
+    maxzoom: 19,
+  };
 
   p.getHeader().then((h) => {
     const osmMap = new maplibregl.Map({
@@ -40,13 +56,7 @@ if (BASE_URL) {
       style: {
         version: 8,
         sources: {
-          osm: {
-            type: "raster",
-            tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: "&copy; OpenStreetMap Contributors",
-            maxzoom: 19,
-          },
+          osm: osm_source,
         },
         layers: [
           {
@@ -65,15 +75,7 @@ if (BASE_URL) {
       style: {
         version: 8,
         sources: {
-          satellite: {
-            type: "raster",
-            tiles: [
-              "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            ],
-            tileSize: 256,
-            attribution: "&copy; ArcGIS World Imagery",
-            maxzoom: 18,
-          },
+          satellite: satellite_source,
         },
         layers: [
           {
@@ -120,22 +122,8 @@ if (BASE_URL) {
             type: "vector",
             url: `pmtiles://${BASE_URL}/base.pmtiles`,
           },
-          osm: {
-            type: "raster",
-            tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: "&copy; OpenStreetMap Contributors",
-            maxzoom: 19,
-          },
-          satellite: {
-            type: "raster",
-            tiles: [
-              "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            ],
-            tileSize: 256,
-            attribution: "&copy; ArcGIS World Imagery",
-            maxzoom: 18,
-          },
+          osm: osm_source,
+          satellite: satellite_source,
         },
         layers: [
           {
@@ -318,83 +306,4 @@ if (BASE_URL) {
 
     const stopSync = syncMaps(osmMap, map, satellite);
   });
-}
-
-function addLayers(layersObject, order = [], nested = false) {
-  const layersArray = [];
-
-  if (nested) {
-    for (const key in layersObject) {
-      const value = layersObject[key];
-      if (typeof value === "object") {
-        if (Array.isArray(value)) {
-          layersArray.push(...value);
-        } else if (value.hasOwnProperty("id")) {
-          layersArray.push(value);
-        } else {
-          layersArray.push(...addLayers(value, [], true));
-        }
-      }
-    }
-  } else {
-    for (const key of order) {
-      if (key in layersObject) {
-        const value = layersObject[key];
-        if (typeof value === "object") {
-          if (Array.isArray(value)) {
-            layersArray.push(...value);
-          } else if (value.hasOwnProperty("id")) {
-            // If the value has an 'id' property, it's a single layer object
-            layersArray.push(value);
-          } else {
-            layersArray.push(...addLayers(value, [], true));
-          }
-        }
-      }
-    }
-  }
-  return layersArray;
-}
-
-function constructLayerGroups(layersObject, order) {
-  const layerGroups = {
-    Overture: {
-      layers: [],
-      children: order,
-    },
-    OSM: {
-      layers: [
-        {
-          id: "osm",
-          type: "raster",
-          source: "osm",
-        },
-      ],
-      children: [],
-    },
-    Satellite: {
-      layers: [
-        {
-          id: "satellite",
-          type: "raster",
-          source: "satellite",
-        },
-      ],
-      children: [],
-    },
-  };
-
-  for (const key of order) {
-    if (key in layersObject) {
-      const value = layersObject[key];
-      const layersArray = addLayers({ [key]: value }, [], true);
-
-      layerGroups[key] = {
-        layers: layersArray,
-        children: [],
-      };
-    }
-  }
-
-  return layerGroups;
 }
