@@ -5,7 +5,11 @@ import {
   allLayers as localAllLayers,
   layerOrder as localLayerOrder,
 } from "../styles/default.js";
-import { addLayers, constructLayerGroups } from "./utils.js";
+import {
+  addLayers,
+  createNestedLayerGroup,
+  constructLayerGroups,
+} from "./utils.js";
 let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
@@ -51,6 +55,9 @@ if (BASE_URL) {
   };
 
   p.getHeader().then((h) => {
+    const default_lat = h.centerLat;
+    const default_lon = h.centerLon;
+    const default_zoom = h.maxZoom;
     const osmMap = new maplibregl.Map({
       container: "osm",
       style: {
@@ -66,8 +73,8 @@ if (BASE_URL) {
           },
         ],
       },
-      center: [h.centerLon, h.centerLat],
-      zoom: h.maxZoom - 2,
+      center: [default_lon, default_lat],
+      zoom: default_zoom,
     });
 
     const satellite = new maplibregl.Map({
@@ -85,43 +92,46 @@ if (BASE_URL) {
           },
         ],
       },
-      center: [h.centerLon, h.centerLat],
-      zoom: h.maxZoom - 2,
+      center: [default_lon, default_lat],
+      zoom: default_zoom,
     });
+    let pmtile_sources = {
+      roads: {
+        type: "vector",
+        url: `pmtiles://${BASE_URL}/roads.pmtiles`,
+      },
+      places: {
+        type: "vector",
+        url: `pmtiles://${BASE_URL}/places.pmtiles`,
+      },
+      placenames: {
+        type: "vector",
+        url: `pmtiles://${BASE_URL}/placenames.pmtiles`,
+      },
+      buildings: {
+        type: "vector",
+        url: `pmtiles://${BASE_URL}/buildings.pmtiles`,
+      },
+      boundary: {
+        type: "vector",
+        url: `pmtiles://${BASE_URL}/boundary.pmtiles`,
+      },
+      base: {
+        type: "vector",
+        url: `pmtiles://${BASE_URL}/base.pmtiles`,
+      },
+    };
 
     const map = new maplibregl.Map({
       container: "overture",
-      zoom: h.maxZoom - 2,
-      center: [h.centerLon, h.centerLat],
+      zoom: default_zoom,
+      center: [default_lon, default_lat],
       style: {
         version: 8,
         light: { anchor: "viewport", color: "white", intensity: 0.8 },
         glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
         sources: {
-          roads: {
-            type: "vector",
-            url: `pmtiles://${BASE_URL}/roads.pmtiles`,
-          },
-          places: {
-            type: "vector",
-            url: `pmtiles://${BASE_URL}/places.pmtiles`,
-          },
-          placenames: {
-            type: "vector",
-            url: `pmtiles://${BASE_URL}/placenames.pmtiles`,
-          },
-          buildings: {
-            type: "vector",
-            url: `pmtiles://${BASE_URL}/buildings.pmtiles`,
-          },
-          boundary: {
-            type: "vector",
-            url: `pmtiles://${BASE_URL}/boundary.pmtiles`,
-          },
-          base: {
-            type: "vector",
-            url: `pmtiles://${BASE_URL}/base.pmtiles`,
-          },
+          ...pmtile_sources,
           osm: osm_source,
           satellite: satellite_source,
         },
@@ -200,110 +210,150 @@ if (BASE_URL) {
         fixedPopup = true;
       }
     });
-
-    const layerGroups = constructLayerGroups(allLayers, layerOrder);
-    // console.log(JSON.stringify(layerGroups, null, 2));
-
-    const layerControl = document.getElementById("layer-control");
-    const createNestedLayerGroup = (groupName, isNested = false) => {
-      const group = layerGroups[groupName];
-      const groupDiv = document.createElement("div");
-      groupDiv.classList.add("layer-group");
-
-      const headerDiv = document.createElement("div");
-      headerDiv.classList.add("layer-group-header");
-
-      const masterCheckbox = document.createElement("input");
-      masterCheckbox.type = "checkbox";
-      masterCheckbox.checked = true;
-      masterCheckbox.addEventListener("change", (e) => {
-        const visibility = e.target.checked ? "visible" : "none";
-        toggleLayerVisibility(group.layers, visibility);
-        if (!isNested) {
-          group.children.forEach((childGroupName) => {
-            const childGroup = layerGroups[childGroupName];
-            const nestedCheckboxes = groupDiv.querySelectorAll(
-              `.layer-group-content input[type='checkbox']`
-            );
-            nestedCheckboxes.forEach((checkbox) => {
-              checkbox.checked = e.target.checked;
-              toggleLayerVisibility(childGroup.layers, visibility);
-            });
-          });
-        }
-      });
-
-      const headerLabel = document.createElement("label");
-      headerLabel.appendChild(masterCheckbox);
-      headerLabel.appendChild(document.createTextNode(groupName));
-
-      headerDiv.appendChild(headerLabel);
-
-      const contentDiv = document.createElement("div");
-      contentDiv.classList.add("layer-group-content");
-      contentDiv.style.display = isNested ? "none" : "block";
-
-      headerDiv.addEventListener("click", () => {
-        contentDiv.style.display =
-          contentDiv.style.display === "none" ? "block" : "none";
-      });
-
-      if (!isNested) {
-        group.children.forEach((childGroupName) => {
-          const childGroup = createNestedLayerGroup(childGroupName, true);
-          contentDiv.appendChild(childGroup);
-        });
-      } else {
-        group.layers.forEach((layer) => {
-          const label = document.createElement("label");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = true;
-          checkbox.addEventListener("change", (e) => {
-            const visibility = e.target.checked ? "visible" : "none";
-            map.setLayoutProperty(layer.id, "visibility", visibility);
-          });
-          const colorBox = document.createElement("span");
-          colorBox.style.display = "inline-block";
-          colorBox.style.width = "15px";
-          colorBox.style.height = "15px";
-          const colorKey = Object.keys(layer.paint).find((key) =>
-            key.toLowerCase().includes("color")
-          );
-
-          if (colorKey) {
-            colorBox.style.backgroundColor = layer.paint[colorKey];
-          } else {
-            colorBox.style.backgroundColor = "#ccc";
-          }
-          colorBox.style.marginRight = "5px";
-
-          const layerName = document.createTextNode(layer.id);
-
-          label.appendChild(checkbox);
-          label.appendChild(colorBox);
-          label.appendChild(layerName);
-          contentDiv.appendChild(label);
-        });
-      }
-
-      groupDiv.appendChild(headerDiv);
-      groupDiv.appendChild(contentDiv);
-      layerControl.appendChild(groupDiv);
-
-      return groupDiv;
-    };
-
-    const toggleLayerVisibility = (layers, visibility) => {
-      layers.forEach((layer) => {
-        map.setLayoutProperty(layer.id, "visibility", visibility);
-      });
-    };
-
-    createNestedLayerGroup("Overture");
-    createNestedLayerGroup("OSM");
-    createNestedLayerGroup("Satellite");
-
+    createLegend(
+      map,
+      allLayers,
+      layerOrder,
+      pmtile_sources,
+      default_lon,
+      default_lat,
+      default_zoom
+    );
     const stopSync = syncMaps(osmMap, map, satellite);
   });
+}
+
+function createLegend(
+  map,
+  allLayers,
+  layerOrder,
+  pmtileSources,
+  lon,
+  lat,
+  zoom
+) {
+  const layerControl = document.getElementById("layer-control");
+  const layerGroups = constructLayerGroups(allLayers, layerOrder);
+  // Create tab container
+  const tabContainer = document.createElement("div");
+  tabContainer.classList.add("tab-container");
+
+  // Create tabs
+  const legendTab = document.createElement("button");
+  legendTab.classList.add("tab-button", "active");
+  legendTab.textContent = "Legend";
+
+  const sourceTab = document.createElement("button");
+  sourceTab.classList.add("tab-button");
+  sourceTab.textContent = "Sources";
+
+  tabContainer.appendChild(legendTab);
+  tabContainer.appendChild(sourceTab);
+
+  // Create tab content containers
+  const legendContent = document.createElement("div");
+  legendContent.classList.add("tab-content");
+
+  const sourceContent = document.createElement("div");
+  sourceContent.classList.add("tab-content", "hidden");
+
+  layerControl.appendChild(tabContainer);
+  layerControl.appendChild(legendContent);
+  layerControl.appendChild(sourceContent);
+
+  const toggleLayerVisibility = (layers, visibility) => {
+    layers.forEach((layer) => {
+      map.setLayoutProperty(layer.id, "visibility", visibility);
+    });
+  };
+  // Legend tab content
+  const createGroupDiv = createNestedLayerGroup(
+    "Overture",
+    false,
+    map,
+    layerGroups,
+    toggleLayerVisibility
+  );
+  legendContent.appendChild(createGroupDiv);
+
+  const createOSMGroupDiv = createNestedLayerGroup(
+    "OSM",
+    false,
+    map,
+    layerGroups,
+    toggleLayerVisibility
+  );
+  legendContent.appendChild(createOSMGroupDiv);
+
+  const createSatelliteGroupDiv = createNestedLayerGroup(
+    "Satellite",
+    false,
+    map,
+    layerGroups,
+    toggleLayerVisibility
+  );
+  legendContent.appendChild(createSatelliteGroupDiv);
+
+  const sourceList = document.createElement("ul");
+  for (const [sourceName, sourceData] of Object.entries(pmtileSources)) {
+    const sourceItem = document.createElement("li");
+    sourceItem.textContent = sourceName;
+
+    const openOSMButton = document.createElement("button");
+    openOSMButton.textContent = "Open in Rapid";
+    let modifiedUrl = sourceData.url.includes("pmtiles://")
+      ? sourceData.url.replace("pmtiles://", "")
+      : sourceData.url;
+    openOSMButton.addEventListener("click", () => {
+      window.open(
+        "https://rapideditor.org/edit#map=" +
+          zoom +
+          "/" +
+          lat +
+          "/" +
+          lon +
+          "&background=Bing&data=" +
+          modifiedUrl,
+        "_blank"
+      );
+    });
+
+    const openPMTilesButton = document.createElement("button");
+    openPMTilesButton.textContent = "Open in PMTiles Viewer";
+    openPMTilesButton.addEventListener("click", () => {
+      window.open(
+        "https://protomaps.github.io/PMTiles/?url=" + modifiedUrl,
+        "_blank"
+      );
+    });
+
+    sourceItem.appendChild(openOSMButton);
+    sourceItem.appendChild(openPMTilesButton);
+    sourceList.appendChild(sourceItem);
+  }
+
+  sourceContent.appendChild(sourceList);
+
+  // Tab switching
+  const tabButtons = tabContainer.querySelectorAll(".tab-button");
+  const tabContents = layerControl.querySelectorAll(".tab-content");
+
+  function showTab(tabIndex) {
+    tabContents.forEach((content) => {
+      content.classList.add("hidden");
+    });
+    tabButtons.forEach((button) => {
+      button.classList.remove("active");
+    });
+    tabContents[tabIndex].classList.remove("hidden");
+    tabButtons[tabIndex].classList.add("active");
+  }
+
+  tabButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      showTab(index);
+    });
+  });
+
+  showTab(0);
 }

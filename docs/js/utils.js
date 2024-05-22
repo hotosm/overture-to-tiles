@@ -77,4 +77,104 @@ function constructLayerGroups(layersObject, order) {
   return layerGroups;
 }
 
-export { addLayers, constructLayerGroups };
+function createNestedLayerGroup(
+  groupName,
+  isNested = false,
+  map,
+  layerGroups,
+  toggleLayerVisibility
+) {
+  const group = layerGroups[groupName];
+  const groupDiv = document.createElement("div");
+  groupDiv.classList.add("layer-group");
+
+  const headerDiv = document.createElement("div");
+  headerDiv.classList.add("layer-group-header");
+
+  const masterCheckbox = document.createElement("input");
+  masterCheckbox.type = "checkbox";
+  masterCheckbox.checked = true;
+  masterCheckbox.addEventListener("change", (e) => {
+    const visibility = e.target.checked ? "visible" : "none";
+    toggleLayerVisibility(group.layers, visibility);
+    if (!isNested) {
+      group.children.forEach((childGroupName) => {
+        const childGroup = layerGroups[childGroupName];
+        const nestedCheckboxes = groupDiv.querySelectorAll(
+          `.layer-group-content input[type='checkbox']`
+        );
+        nestedCheckboxes.forEach((checkbox) => {
+          checkbox.checked = e.target.checked;
+          toggleLayerVisibility(childGroup.layers, visibility);
+        });
+      });
+    }
+  });
+
+  const headerLabel = document.createElement("label");
+  headerLabel.appendChild(masterCheckbox);
+  headerLabel.appendChild(document.createTextNode(groupName));
+
+  headerDiv.appendChild(headerLabel);
+
+  const contentDiv = document.createElement("div");
+  contentDiv.classList.add("layer-group-content");
+  contentDiv.style.display = isNested ? "none" : "block";
+
+  headerDiv.addEventListener("click", () => {
+    contentDiv.style.display =
+      contentDiv.style.display === "none" ? "block" : "none";
+  });
+
+  if (!isNested) {
+    group.children.forEach((childGroupName) => {
+      const childGroup = createNestedLayerGroup(
+        childGroupName,
+        true,
+        map,
+        layerGroups,
+        toggleLayerVisibility
+      );
+      contentDiv.appendChild(childGroup);
+    });
+  } else {
+    group.layers.forEach((layer) => {
+      const label = document.createElement("label");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = true;
+      checkbox.addEventListener("change", (e) => {
+        const visibility = e.target.checked ? "visible" : "none";
+        map.setLayoutProperty(layer.id, "visibility", visibility);
+      });
+      const colorBox = document.createElement("span");
+      colorBox.style.display = "inline-block";
+      colorBox.style.width = "15px";
+      colorBox.style.height = "15px";
+      const colorKey = Object.keys(layer.paint).find((key) =>
+        key.toLowerCase().includes("color")
+      );
+
+      if (colorKey) {
+        colorBox.style.backgroundColor = layer.paint[colorKey];
+      } else {
+        colorBox.style.backgroundColor = "#ccc";
+      }
+      colorBox.style.marginRight = "5px";
+
+      const layerName = document.createTextNode(layer.id);
+
+      label.appendChild(checkbox);
+      label.appendChild(colorBox);
+      label.appendChild(layerName);
+      contentDiv.appendChild(label);
+    });
+  }
+
+  groupDiv.appendChild(headerDiv);
+  groupDiv.appendChild(contentDiv);
+
+  return groupDiv;
+}
+
+export { addLayers, createNestedLayerGroup, constructLayerGroups };
