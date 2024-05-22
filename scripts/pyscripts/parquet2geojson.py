@@ -18,14 +18,14 @@ python parquet2geojson.py -i input.parquet -o output.geojsonseq -f geojsonseq
 # Use 8 worker processes
 python parquet2geojson.py -i input.parquet -o output.geojson -w 8
 """
-
 import json
-import multiprocessing as mp
 import os
 
 import click
 import pyarrow.parquet as pq
 import shapely.wkb
+
+from tqdm import tqdm
 
 
 @click.command()
@@ -50,28 +50,17 @@ import shapely.wkb
     default="geojson",
     help="Output format (GeoJSON or GeoJSONSeq).",
 )
-@click.option(
-    "--num-workers",
-    "-w",
-    type=int,
-    default=1,
-    help="Number of worker processes to use (default: number of CPU cores).",
-)
-def convert(input, output, format, num_workers):
-
+def convert(input, output, format):
     print(f"Read : {input}")
     print(f"Write : {format} - {output}")
-    print(f"Workers: {num_workers}")
+
     pq_file = pq.ParquetFile(input)
-    if num_workers > 1:
-        pool = mp.Pool(processes=num_workers)
-        batches = pool.imap(convert_batch, pq_file.iter_batches())
-    else:
-        batches = map(convert_batch, pq_file.iter_batches())
+    batches = pq_file.iter_batches()
 
     with get_writer(format, output) as writer:
-        for batch in batches:
-            writer.write_batch(batch)
+        for batch in tqdm(batches, desc="Processing batches"):
+            if batch.num_rows > 0:
+                writer.write_batch(batch)
 
 
 def flatten_properties(data, target, parent_key="", top_level=False):
@@ -129,7 +118,8 @@ class BaseGeoJSONWriter:
             self.is_open = False
 
     def write_batch(self, batch):
-        for feature in batch:
+        features = convert_batch(batch)
+        for feature in features:
             self.write_feature(feature)
 
     def write_feature(self, feature):
