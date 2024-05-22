@@ -54,7 +54,7 @@ import shapely.wkb
     "--num-workers",
     "-w",
     type=int,
-    default=max(1, mp.cpu_count() - 1),
+    default=1,
     help="Number of worker processes to use (default: number of CPU cores).",
 )
 def convert(input, output, format, num_workers):
