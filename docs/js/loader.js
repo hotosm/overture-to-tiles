@@ -71,6 +71,7 @@ if (!urlParam) {
   form.appendChild(urlInput);
   form.appendChild(document.createElement("br"));
   form.appendChild(styleLabel);
+  form.appendChild(document.createElement("br"));
   form.appendChild(styleInput);
   form.appendChild(document.createElement("br"));
   form.appendChild(submitButton);
