@@ -33,7 +33,7 @@ if (!urlParam) {
   
   const urlLabel = document.createElement("label");
   urlLabel.textContent = "Tile URL:";
-  form.appendChild(urlLabel);
+
 
   const urlInput = document.createElement("input");
   urlInput.id = "urlInput";
@@ -46,11 +46,10 @@ if (!urlParam) {
   else {
   urlInput.value = "https://staging-raw-data-api.s3.amazonaws.com/default/overture/2024-05-16-beta.0/argentina/pmtiles";
   }
-  form.appendChild(document.createElement("br"));
 
   const styleLabel = document.createElement("label");
   styleLabel.textContent = "Style URL:";
-  form.appendChild(styleLabel);
+  
   const styleInput = document.createElement("input");
   styleInput.id = "styleInput";
   styleInput.type = "text";
@@ -62,14 +61,16 @@ if (!urlParam) {
   styleInput.value = "https://github.com/kshitijrajsharma/overture-to-tiles/blob/master/docs/styles/default.js"; 
 
   }
-  form.appendChild(document.createElement("br"));
 
   const submitButton = document.createElement("button");
   submitButton.type = "submit";
   submitButton.textContent = "Submit";
-
+  
+  form.appendChild(urlLabel);
+  form.appendChild(document.createElement("br"));
   form.appendChild(urlInput);
   form.appendChild(document.createElement("br"));
+  form.appendChild(styleLabel);
   form.appendChild(styleInput);
   form.appendChild(document.createElement("br"));
   form.appendChild(submitButton);
