@@ -35,8 +35,12 @@ if (!urlParam) {
   urlInput.id = "urlInput";
   urlInput.type = "text";
   urlInput.placeholder = "Enter Tile Base URL";
+
   if (urlParam) {
     urlInput.value = urlParam;
+  }
+  else {
+  urlInput.value = "https://staging-raw-data-api.s3.amazonaws.com/default/overture/2024-05-16-beta.0/argentina/pmtiles";
   }
 
   const styleInput = document.createElement("input");
@@ -45,6 +49,10 @@ if (!urlParam) {
   styleInput.placeholder = "Enter Style URL";
   if (styleParam) {
     styleInput.value = styleParam;
+  }
+  else {
+  styleInput.value = "https://github.com/kshitijrajsharma/overture-to-tiles/blob/master/docs/styles/default.js"; 
+
   }
 
   const submitButton = document.createElement("button");
