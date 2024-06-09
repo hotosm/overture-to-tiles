@@ -57,10 +57,6 @@ if (!urlParam) {
   if (styleParam) {
     styleInput.value = styleParam;
   }
-  else {
-  styleInput.value = "https://github.com/kshitijrajsharma/overture-to-tiles/blob/master/docs/styles/default.js"; 
-
-  }
 
   const submitButton = document.createElement("button");
   submitButton.type = "submit";
