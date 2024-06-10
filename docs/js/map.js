@@ -295,12 +295,20 @@ function createLegend(
   legendContent.appendChild(createSatelliteGroupDiv);
 
   const sourceList = document.createElement("ul");
+  sourceList.style.listStyleType = "none";
+  sourceList.style.padding = "0";
+
   for (const [sourceName, sourceData] of Object.entries(pmtileSources)) {
     const sourceItem = document.createElement("li");
     sourceItem.textContent = sourceName;
+    sourceItem.style.display = "flex";
+    sourceItem.style.alignItems = "center";
+    sourceItem.style.marginBottom = "10px";
 
     const openOSMButton = document.createElement("button");
-    openOSMButton.textContent = "Open in Rapid";
+    openOSMButton.textContent = "RapID";
+    openOSMButton.title = "Open in RapID";
+    openOSMButton.style.marginRight = "10px";
     let modifiedUrl = sourceData.url.includes("pmtiles://")
       ? sourceData.url.replace("pmtiles://", "")
       : sourceData.url;
@@ -319,7 +327,9 @@ function createLegend(
     });
 
     const openPMTilesButton = document.createElement("button");
-    openPMTilesButton.textContent = "Open in PMTiles Viewer";
+    openPMTilesButton.textContent = "PMTiles";
+    openPMTilesButton.title = "Open in PMTiles Viewer";
+    openPMTilesButton.style.marginRight = "10px";
     openPMTilesButton.addEventListener("click", () => {
       window.open(
         "https://protomaps.github.io/PMTiles/?url=" + modifiedUrl,
@@ -327,8 +337,19 @@ function createLegend(
       );
     });
 
+    const downloadGeoParquetButton = document.createElement("button");
+    downloadGeoParquetButton.textContent = "Download";
+    downloadGeoParquetButton.title = "Download GeoParquet";
+    const parquetUrl = modifiedUrl
+      .replace("/pmtiles/", "/parquet/")
+      .replace(".pmtiles", ".geo.parquet");
+    downloadGeoParquetButton.addEventListener("click", () => {
+      window.open(parquetUrl, "_blank");
+    });
+
     sourceItem.appendChild(openOSMButton);
     sourceItem.appendChild(openPMTilesButton);
+    sourceItem.appendChild(downloadGeoParquetButton);
     sourceList.appendChild(sourceItem);
   }
 
